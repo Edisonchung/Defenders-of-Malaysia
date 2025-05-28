@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defenders of Malaysia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            border: 3px solid #00ffff;
+            border-radius: 15px;
+            box-shadow: 0 0 30px #00ffff88, inset 0 0 30px #00ffff22;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 12px;
+            background: radial-gradient(ellipse at center, #001122 0%, #000811 100%);
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .score, .lives, .level {
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ffff;
+            backdrop-filter: blur(5px);
+        }
+
+        .start-screen, .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 0 50px #00ffff88;
+            backdrop-filter: blur(10px);
+        }
+
+        .start-screen h2, .game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ffff;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .start-screen p, .game-over p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            color: #aaaaff;
+        }
+
+        .start-btn, .restart-btn {
+            background: linear-gradient(45deg, #00ffff, #0088ff);
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .start-btn:hover, .restart-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.6);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="ui-overlay">
+            <div class="score">Score: <span id="scoreValue">0</span></div>
+            <div class="level">Level: <span id="levelValue">1</span></div>
+            <div class="lives">Lives: <span id="livesValue">3</span></div>
+            <div class="level">Wave: <span id="waveValue">1</span></div>
+        </div>
+
+        <div id="startScreen" class="start-screen">
+            <h2>DEFENDERS OF MALAYSIA</h2>
+            <p>🇲🇾 Protect the homeland from alien invasion! 🇲🇾</p>
+            <p>Defend Kuala Lumpur and all of Malaysia!</p>
+            <p>Use WASD or Arrow Keys to move, SPACE to shoot</p>
+            <button class="start-btn" onclick="startGame()">MULA MISI!</button>
+        </div>
+
+        <div id="gameOverScreen" class="game-over" style="display: none;">
+            <h2>MALAYSIA TERANCAM!</h2>
+            <p>The Twin Towers have fallen...</p>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">CUBA LAGI!</button>
+        </div>
+
+        <div class="controls">
+            <p>WASD / Arrow Keys: Move | SPACE: Fire | ESC: Pause</p>
+            <p style="margin-top: 10px; color: #FFD700;">🇲🇾 Mempertahankan Malaysia dari pencerobohan asing! 🇲🇾</p>
+        </div>
+    </div>
+
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state variables
+        let gameState = 'start';
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let enemySpeed = 1;
+        let enemySpawnRate = 0.02;
+        let wave = 1;
+        let enemiesInWave = 0;
+        let maxEnemiesPerWave = 8;
+        let bossActive = false;
+        let stateMessage = "";
+        let stateMessageTimer = 0;
+        let gamePhase = 'preparation'; // 'preparation', 'invasion', 'crisis', 'final'
+
+        // Game objects
+        let player = {};
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let stars = [];
+        let landmarks = [];
+        let bosses = [];
+        let powerUps = [];
+
+        // Input handling
+        const keys = {};
+        let lastShotTime = 0;
+        const shotCooldown = 150;
+
+        // Initialize game
+        function initGame() {
+            // Player setup
+            player = {
+                x: canvas.width / 2,
+                y: canvas.height - 80,
+                width: 40,
+                height: 40,
+                speed: 5,
+                color: '#00ffff'
+            };
+
+            // Clear arrays
+            bullets = [];
+            enemies = [];
+            particles = [];
+            stars = [];
+            landmarks = [];
+            bosses = [];
+            powerUps = [];
+
+            // Create starfield
+            for (let i = 0; i < 100; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 0.5 + 0.5
+                });
+            }
+
+            // Create Malaysian landmarks with health
+            landmarks = [
+                { name: 'Twin Towers', x: 150, y: canvas.height - 200, width: 40, height: 180, color: '#C0C0C0', health: 100, maxHealth: 100 },
+                { name: 'KL Tower', x: 350, y: canvas.height - 150, width: 20, height: 130, color: '#DAA520', health: 100, maxHealth: 100 },
+                { name: 'Sultan Abdul Samad', x: 550, y: canvas.height - 100, width: 80, height: 80, color: '#8B4513', health: 100, maxHealth: 100 },
+                { name: 'KLCC', x: 700, y: canvas.height - 120, width: 60, height: 100, color: '#4169E1', health: 100, maxHealth: 100 }
+            ];
+
+            // Reset game variables
+            score = 0;
+            lives = 3;
+            level = 1;
+            wave = 1;
+            enemiesInWave = 0;
+            maxEnemiesPerWave = 8;
+            enemySpeed = 1;
+            enemySpawnRate = 0.02;
+            bossActive = false;
+            gamePhase = 'preparation';
+            showMessage("Prepare for Malaysian Defense!", 3000);
+            updateUI();
+        }
+
+        // Draw player
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            
+            // Malaysian fighter jet with flag colors
+            ctx.fillStyle = '#CC0000'; // Red
+            ctx.beginPath();
+            ctx.moveTo(0, -20);
+            ctx.lineTo(-15, 20);
+            ctx.lineTo(-5, 15);
+            ctx.lineTo(0, 10);
+            ctx.lineTo(5, 15);
+            ctx.lineTo(15, 20);
+            ctx.closePath();
+            ctx.fill();
+
+            // Blue stripe
+            ctx.fillStyle = '#003893';
+            ctx.fillRect(-12, -5, 24, 6);
+
+            // Gold star
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(-3, -8, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Engine glow
+            ctx.fillStyle = '#ff4444';
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 8, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Outline
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -20);
+            ctx.lineTo(-15, 20);
+            ctx.lineTo(-5, 15);
+            ctx.lineTo(0, 10);
+            ctx.lineTo(5, 15);
+            ctx.lineTo(15, 20);
+            ctx.closePath();
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Update player
+        function updatePlayer() {
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                player.x = Math.max(20, player.x - player.speed);
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                player.x = Math.min(canvas.width - 20, player.x + player.speed);
+            }
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) {
+                player.y = Math.max(20, player.y - player.speed);
+            }
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+                player.y = Math.min(canvas.height - 20, player.y + player.speed);
+            }
+
+            if (keys[' '] && Date.now() - lastShotTime > shotCooldown) {
+                shoot();
+                lastShotTime = Date.now();
+            }
+        }
+
+        // Shooting
+        function shoot() {
+            bullets.push({
+                x: player.x,
+                y: player.y - 10,
+                width: 4,
+                height: 12,
+                speed: 8,
+                color: '#ffff00'
+            });
+        }
+
+        // Update bullets
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                bullet.y -= bullet.speed;
+
+                if (bullet.y < 0) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        // Draw bullets
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                ctx.fillStyle = bullet.color;
+                ctx.shadowColor = bullet.color;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(bullet.x - bullet.width/2, bullet.y, bullet.width, bullet.height);
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        // Enhanced wave and boss system
+        function checkGamePhase() {
+            if (score < 1000) {
+                gamePhase = 'preparation';
+            } else if (score < 3000) {
+                gamePhase = 'invasion';
+            } else if (score < 6000) {
+                gamePhase = 'crisis';
+            } else {
+                gamePhase = 'final';
+            }
+        }
+
+        function spawnBoss() {
+            if (wave % 5 === 0 && !bossActive && enemies.length === 0) {
+                bossActive = true;
+                const bossNames = [
+                    'Alien Datuk', 'Space Sultan', 'Cosmic Raja', 'Galactic Tun',
+                    'Dark Dato', 'Shadow Tengku', 'Void Tan Sri', 'Final Emperor'
+                ];
+                const bossIndex = Math.min(Math.floor(wave / 5) - 1, bossNames.length - 1);
+                
+                bosses.push({
+                    x: canvas.width / 2,
+                    y: -100,
+                    width: 80 + (bossIndex * 20),
+                    height: 60 + (bossIndex * 15),
+                    speed: 0.8,
+                    health: 100 + (bossIndex * 50),
+                    maxHealth: 100 + (bossIndex * 50),
+                    color: '#ff0066',
+                    name: bossNames[bossIndex],
+                    shootTimer: 0,
+                    points: 200 + (bossIndex * 100)
+                });
+                
+                showMessage(`BOSS WAVE: ${bossNames[bossIndex]}`, 4000);
+            }
+        }
+
+        function updateBosses() {
+            for (let i = bosses.length - 1; i >= 0; i--) {
+                const boss = bosses[i];
+                
+                if (boss.y < 80) {
+                    boss.y += boss.speed;
+                } else {
+                    boss.x += Math.sin(Date.now() * 0.002) * 2;
+                    boss.x = Math.max(boss.width/2, Math.min(canvas.width - boss.width/2, boss.x));
+                }
+                
+                boss.shootTimer++;
+                if (boss.shootTimer > 90) {
+                    boss.shootTimer = 0;
+                    // Boss shoots multiple bullets
+                    for (let j = 0; j < 3; j++) {
+                        enemies.push({
+                            x: boss.x + (j - 1) * 25,
+                            y: boss.y + 30,
+                            width: 12,
+                            height: 12,
+                            speed: 2.5,
+                            color: '#ff3366',
+                            points: 5,
+                            type: 'boss_bullet'
+                        });
+                    }
+                }
+            }
+        }
+
+        function drawBosses() {
+            bosses.forEach(boss => {
+                ctx.save();
+                ctx.translate(boss.x, boss.y);
+                
+                // Boss ship
+                ctx.fillStyle = boss.color;
+                ctx.shadowColor = boss.color;
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.moveTo(0, -25);
+                ctx.lineTo(-boss.width/2, 20);
+                ctx.lineTo(-boss.width/4, 30);
+                ctx.lineTo(boss.width/4, 30);
+                ctx.lineTo(boss.width/2, 20);
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // Boss details
+                ctx.fillStyle = '#990033';
+                ctx.fillRect(-boss.width/3, -5, boss.width/1.5, 15);
+                
+                ctx.restore();
+                
+                // Boss health bar
+                const healthPercentage = boss.health / boss.maxHealth;
+                ctx.fillStyle = '#333';
+                ctx.fillRect(boss.x - 40, boss.y - 50, 80, 6);
+                ctx.fillStyle = healthPercentage > 0.5 ? '#ff0000' : '#990000';
+                ctx.fillRect(boss.x - 40, boss.y - 50, 80 * healthPercentage, 6);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(boss.x - 40, boss.y - 50, 80, 6);
+                
+                // Boss name
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(boss.name, boss.x, boss.y - 60);
+            });
+        }
+
+        function showMessage(message, duration = 2000) {
+            stateMessage = message;
+            stateMessageTimer = duration;
+        }
+
+        function updateStateMessage() {
+            if (stateMessageTimer > 0) {
+                stateMessageTimer -= 16;
+            }
+        }
+
+        function drawStateMessage() {
+            if (stateMessageTimer > 0) {
+                ctx.save();
+                ctx.fillStyle = `rgba(255, 215, 0, ${Math.min(1, stateMessageTimer / 500)})`;
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.strokeStyle = '#003893';
+                ctx.lineWidth = 2;
+                ctx.strokeText(stateMessage, canvas.width / 2, canvas.height / 2 - 100);
+                ctx.fillText(stateMessage, canvas.width / 2, canvas.height / 2 - 100);
+                ctx.restore();
+            }
+        }
+
+        function checkWaveCompletion() {
+            if (enemies.length === 0 && !bossActive && enemiesInWave >= maxEnemiesPerWave) {
+                wave++;
+                enemiesInWave = 0;
+                maxEnemiesPerWave = Math.min(15, 8 + Math.floor(wave * 1.2));
+                
+                const malaysianStates = [
+                    'Kuala Lumpur Secure!', 'Selangor Protected!', 'Johor Defended!',
+                    'Penang Safe!', 'Perak Secured!', 'Sabah Protected!', 'Sarawak Defended!',
+                    'Kelantan Safe!', 'Terengganu Secured!', 'Pahang Protected!',
+                    'Negeri Sembilan Defended!', 'Melaka Safe!', 'Kedah Secured!',
+                    'Perlis Protected!', 'Malaysia United!'
+                ];
+                
+                const stateIndex = Math.min(wave - 1, malaysianStates.length - 1);
+                showMessage(`Wave ${wave}: ${malaysianStates[stateIndex]}`, 3000);
+                
+                // Wave completion bonus
+                score += 50 + (wave * 10);
+                
+                // Heal landmarks slightly
+                landmarks.forEach(landmark => {
+                    landmark.health = Math.min(landmark.maxHealth, landmark.health + 10);
+                });
+                
+                // Check for boss spawn
+                spawnBoss();
+            }
+        }
+        // Spawn enemies with wave system
+        function spawnEnemy() {
+            if (Math.random() < enemySpawnRate && !bossActive && enemiesInWave < maxEnemiesPerWave) {
+                const types = ['basic', 'fast', 'heavy', 'zigzag'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                let enemy = {
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: -30,
+                    width: 30,
+                    height: 30,
+                    type: type,
+                    zigzagDirection: 1,
+                    zigzagTimer: 0
+                };
+
+                switch(type) {
+                    case 'basic':
+                        enemy.speed = enemySpeed;
+                        enemy.color = '#ff4444';
+                        enemy.points = 15;
+                        break;
+                    case 'fast':
+                        enemy.speed = enemySpeed * 1.6;
+                        enemy.color = '#ff8844';
+                        enemy.points = 25;
+                        enemy.width = 25;
+                        enemy.height = 25;
+                        break;
+                    case 'heavy':
+                        enemy.speed = enemySpeed * 0.7;
+                        enemy.color = '#8844ff';
+                        enemy.points = 40;
+                        enemy.width = 40;
+                        enemy.height = 40;
+                        break;
+                    case 'zigzag':
+                        enemy.speed = enemySpeed * 0.9;
+                        enemy.color = '#44ff88';
+                        enemy.points = 30;
+                        break;
+                }
+
+                enemies.push(enemy);
+                enemiesInWave++;
+            }
+        }
+
+        // Update enemies with enhanced patterns
+        function updateEnemies() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                // Enhanced movement patterns
+                if (enemy.type === 'zigzag') {
+                    enemy.zigzagTimer++;
+                    if (enemy.zigzagTimer > 25) {
+                        enemy.zigzagDirection *= -1;
+                        enemy.zigzagTimer = 0;
+                    }
+                    enemy.x += enemy.zigzagDirection * 3;
+                }
+                
+                enemy.y += enemy.speed;
+
+                if (enemy.y > canvas.height) {
+                    enemies.splice(i, 1);
+                    
+                    if (enemy.type !== 'boss_bullet') {
+                        lives--;
+                        const hitLandmark = landmarks[Math.floor(Math.random() * landmarks.length)];
+                        const damage = enemy.type === 'heavy' ? 25 : 15;
+                        hitLandmark.health = Math.max(0, hitLandmark.health - damage);
+                        createExplosion(hitLandmark.x, hitLandmark.y, '#ff4444');
+                        showMessage(`${hitLandmark.name} Under Attack!`, 1500);
+                        
+                        if (lives <= 0) {
+                            gameOver();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Draw enemies with enhanced graphics
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                ctx.save();
+                ctx.translate(enemy.x, enemy.y);
+                
+                ctx.fillStyle = enemy.color;
+                ctx.shadowColor = enemy.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                
+                if (enemy.type === 'basic') {
+                    ctx.moveTo(0, -15);
+                    ctx.lineTo(-15, 15);
+                    ctx.lineTo(15, 15);
+                } else if (enemy.type === 'fast') {
+                    ctx.moveTo(0, -12);
+                    ctx.lineTo(-12, 0);
+                    ctx.lineTo(0, 12);
+                    ctx.lineTo(12, 0);
+                } else if (enemy.type === 'heavy') {
+                    ctx.rect(-20, -15, 40, 30);
+                } else if (enemy.type === 'zigzag') {
+                    // Star shape
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (i * 144 - 90) * Math.PI / 180;
+                        const x = Math.cos(angle) * 12;
+                        const y = Math.sin(angle) * 12;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                } else if (enemy.type === 'boss_bullet') {
+                    ctx.rect(-6, -6, 12, 12);
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
+            });
+        }
+
+        // Enhanced collision detection
+        function checkCollisions() {
+            // Bullet-enemy collisions
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                // Check regular enemy collisions
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    
+                    if (bullet.x > enemy.x - enemy.width/2 &&
+                        bullet.x < enemy.x + enemy.width/2 &&
+                        bullet.y > enemy.y - enemy.height/2 &&
+                        bullet.y < enemy.y + enemy.height/2) {
+                        
+                        createExplosion(enemy.x, enemy.y, enemy.color);
+                        score += enemy.points;
+                        bullets.splice(i, 1);
+                        enemies.splice(j, 1);
+                        break;
+                    }
+                }
+                
+                // Check boss collisions
+                for (let j = bosses.length - 1; j >= 0; j--) {
+                    const boss = bosses[j];
+                    
+                    if (bullet.x > boss.x - boss.width/2 &&
+                        bullet.x < boss.x + boss.width/2 &&
+                        bullet.y > boss.y - boss.height/2 &&
+                        bullet.y < boss.y + boss.height/2) {
+                        
+                        boss.health -= 10;
+                        createExplosion(bullet.x, bullet.y, '#ffff00');
+                        bullets.splice(i, 1);
+                        
+                        if (boss.health <= 0) {
+                            createExplosion(boss.x, boss.y, boss.color);
+                            score += boss.points;
+                            bosses.splice(j, 1);
+                            bossActive = false;
+                            showMessage(`${boss.name} DEFEATED!`, 3000);
+                            
+                            // Boss defeat bonus
+                            score += 100;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Player-enemy collisions
+            enemies.forEach((enemy, index) => {
+                const dist = Math.sqrt((player.x - enemy.x) ** 2 + (player.y - enemy.y) ** 2);
+                if (dist < 25) {
+                    createExplosion(enemy.x, enemy.y, enemy.color);
+                    createExplosion(player.x, player.y, player.color);
+                    enemies.splice(index, 1);
+                    lives--;
+                    if (lives <= 0) {
+                        gameOver();
+                    }
+                }
+            });
+
+            // Player-boss collisions
+            bosses.forEach((boss, index) => {
+                const dist = Math.sqrt((player.x - boss.x) ** 2 + (player.y - boss.y) ** 2);
+                if (dist < 40) {
+                    createExplosion(player.x, player.y, player.color);
+                    lives--;
+                    if (lives <= 0) {
+                        gameOver();
+                    }
+                }
+            });
+        }
+
+        // Particle explosion
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 30,
+                    color: color,
+                    size: Math.random() * 4 + 2
+                });
+            }
+        }
+
+        // Update particles
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                p.life--;
+                p.size *= 0.95;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // Draw particles
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life / 30;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        // Stars background
+        function updateStars() {
+            stars.forEach(star => {
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+            });
+        }
+
+        function drawStars() {
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                ctx.globalAlpha = 0.7;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // Draw landmarks with health indicators
+        function drawLandmarks() {
+            landmarks.forEach(landmark => {
+                ctx.save();
+                ctx.globalAlpha = 0.7;
+                const healthPercentage = landmark.health / landmark.maxHealth;
+                const baseColor = healthPercentage > 0.7 ? landmark.color : 
+                                 healthPercentage > 0.3 ? '#888888' : '#444444';
+                ctx.fillStyle = baseColor;
+                
+                if (landmark.name === 'Twin Towers') {
+                    // Twin towers
+                    ctx.fillRect(landmark.x - 8, landmark.y, 16, landmark.height);
+                    ctx.fillRect(landmark.x + 8, landmark.y, 16, landmark.height);
+                    // Sky bridge
+                    ctx.fillRect(landmark.x - 8, landmark.y + 80, 32, 4);
+                    // Windows
+                    ctx.fillStyle = healthPercentage > 0.3 ? '#FFD700' : '#666';
+                    for (let i = 0; i < 8; i++) {
+                        ctx.fillRect(landmark.x - 6, landmark.y + i * 20, 2, 2);
+                        ctx.fillRect(landmark.x + 10, landmark.y + i * 20, 2, 2);
+                    }
+                } else if (landmark.name === 'KL Tower') {
+                    // Tower body
+                    ctx.fillRect(landmark.x - 5, landmark.y, 10, landmark.height);
+                    // Tower top
+                    ctx.beginPath();
+                    ctx.arc(landmark.x, landmark.y - 10, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (landmark.name === 'Sultan Abdul Samad') {
+                    // Main building
+                    ctx.fillRect(landmark.x - landmark.width/2, landmark.y, landmark.width, landmark.height);
+                    // Clock tower
+                    ctx.fillRect(landmark.x - 8, landmark.y - 40, 16, 40);
+                    // Dome
+                    ctx.fillStyle = healthPercentage > 0.5 ? '#32CD32' : '#228B22';
+                    ctx.beginPath();
+                    ctx.arc(landmark.x, landmark.y - 40, 12, 0, Math.PI);
+                    ctx.fill();
+                } else if (landmark.name === 'KLCC') {
+                    // Modern building
+                    ctx.fillRect(landmark.x - landmark.width/2, landmark.y, landmark.width, landmark.height);
+                    // Windows
+                    ctx.fillStyle = healthPercentage > 0.3 ? '#87CEEB' : '#666';
+                    for (let i = 0; i < 6; i++) {
+                        ctx.fillRect(landmark.x - 25 + i * 8, landmark.y + 10, 6, 4);
+                        ctx.fillRect(landmark.x - 25 + i * 8, landmark.y + 30, 6, 4);
+                        ctx.fillRect(landmark.x - 25 + i * 8, landmark.y + 50, 6, 4);
+                    }
+                }
+                
+                // Health bar
+                if (landmark.health < landmark.maxHealth) {
+                    const barWidth = Math.max(landmark.width, 40);
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(landmark.x - barWidth/2, landmark.y - 20, barWidth, 4);
+                    ctx.fillStyle = healthPercentage > 0.7 ? '#00ff00' : 
+                                   healthPercentage > 0.3 ? '#ffff00' : '#ff0000';
+                    ctx.fillRect(landmark.x - barWidth/2, landmark.y - 20, barWidth * healthPercentage, 4);
+                }
+                
+                ctx.restore();
+            });
+        }
+
+        // Enhanced level progression
+        function checkLevelUp() {
+            const newLevel = Math.floor(score / 1500) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                enemySpeed += 0.2;
+                enemySpawnRate = Math.min(0.04, enemySpawnRate + 0.003);
+                
+                // Major milestone rewards
+                if (level === 5) {
+                    showMessage("🇲🇾 SELANGOR LIBERATED! 🇲🇾", 4000);
+                } else if (level === 10) {
+                    showMessage("🇲🇾 PENINSULAR MALAYSIA SECURE! 🇲🇾", 4000);
+                } else if (level === 15) {
+                    showMessage("🇲🇾 EAST MALAYSIA DEFENDED! 🇲🇾", 4000);
+                } else if (level === 20) {
+                    showMessage("🇲🇾 FINAL ASSAULT - DEFEND PUTRAJAYA! 🇲🇾", 5000);
+                } else {
+                    showMessage(`Level ${level} - Malaysia Stronger!`, 2000);
+                }
+                
+                createExplosion(canvas.width / 2, 100, '#FFD700');
+                
+                // Level bonus
+                score += level * 50;
+                
+                // Heal landmarks on major levels
+                if (level % 5 === 0) {
+                    landmarks.forEach(landmark => {
+                        landmark.health = landmark.maxHealth;
+                    });
+                }
+            }
+        }
+
+        // Update UI with wave info
+        function updateUI() {
+            document.getElementById('scoreValue').textContent = score;
+            document.getElementById('livesValue').textContent = lives;
+            document.getElementById('levelValue').textContent = level;
+            document.getElementById('waveValue').textContent = wave;
+        }
+
+        // Victory condition
+        function checkVictory() {
+            if (score >= 15000 && level >= 20) {
+                gameState = 'victory';
+                showMessage("🇲🇾 MALAYSIA VICTORIOUS! 🇲🇾", 10000);
+                setTimeout(() => {
+                    const gameOverScreen = document.getElementById('gameOverScreen');
+                    gameOverScreen.querySelector('h2').textContent = 'MALAYSIA BERJAYA!';
+                    gameOverScreen.querySelector('p').textContent = 'You have successfully defended the homeland!';
+                    gameOverScreen.style.display = 'block';
+                }, 3000);
+            }
+        }
+
+        // Enhanced game loop
+        function gameLoop() {
+            if (gameState !== 'playing') return;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update
+            updateStars();
+            updatePlayer();
+            updateBullets();
+            spawnEnemy();
+            updateEnemies();
+            updateBosses();
+            updateParticles();
+            updateStateMessage();
+            checkCollisions();
+            checkLevelUp();
+            checkWaveCompletion();
+            checkGamePhase();
+            checkVictory();
+            updateUI();
+
+            // Draw
+            drawStars();
+            drawLandmarks();
+            drawPlayer();
+            drawBullets();
+            drawEnemies();
+            drawBosses();
+            drawParticles();
+            drawStateMessage();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Game control functions
+        function startGame() {
+            gameState = 'playing';
+            document.getElementById('startScreen').style.display = 'none';
+            initGame();
+            gameLoop();
+        }
+
+        function gameOver() {
+            gameState = 'gameOver';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverScreen').style.display = 'block';
+        }
+
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            startGame();
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === 'Escape') {
+                if (gameState === 'playing') {
+                    gameState = 'paused';
+                } else if (gameState === 'paused') {
+                    gameState = 'playing';
+                    gameLoop();
+                }
+            }
+            e.preventDefault();
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Initialize game
+        initGame();
+    </script>
+</body>
+</html>
