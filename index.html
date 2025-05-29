@@ -510,7 +510,7 @@
             <h3>⚙️ GAME SETTINGS</h3>
             
             <div class="setting-item">
-                <div>
+                <div class="setting-left">
                     <div class="setting-label">Right-Handed Mode</div>
                     <div class="setting-description">Joystick on right, fire buttons on left</div>
                 </div>
@@ -520,7 +520,7 @@
             </div>
             
             <div class="setting-item">
-                <div>
+                <div class="setting-left">
                     <div class="setting-label">Show Minimap</div>
                     <div class="setting-description">Display tactical minimap</div>
                 </div>
@@ -530,7 +530,7 @@
             </div>
             
             <div class="setting-item">
-                <div>
+                <div class="setting-left">
                     <div class="setting-label">Enhanced Graphics</div>
                     <div class="setting-description">Better effects but may reduce performance</div>
                 </div>
@@ -540,7 +540,7 @@
             </div>
             
             <div class="setting-item">
-                <div>
+                <div class="setting-left">
                     <div class="setting-label">Vibration</div>
                     <div class="setting-description">Haptic feedback on mobile devices</div>
                 </div>
@@ -809,28 +809,86 @@
         window.toggleLeftHanded = function() {
             console.log('🔄 TOGGLE LEFT HANDED CALLED!');
             gameSettings.leftHanded = !gameSettings.leftHanded;
-            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+            console.log('Left handed mode now:', gameSettings.leftHanded);
+            if (typeof updateSettingsUI === 'function') {
+                updateSettingsUI();
+            } else {
+                // Manual toggle update
+                const toggle = document.getElementById('leftHandedToggle');
+                if (toggle) {
+                    toggle.classList.toggle('active', gameSettings.leftHanded);
+                }
+            }
         };
 
         window.toggleMinimap = function() {
+            console.log('🗺️ TOGGLE MINIMAP CALLED!');
             gameSettings.showMinimap = !gameSettings.showMinimap;
-            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+            console.log('Show minimap now:', gameSettings.showMinimap);
+            if (typeof updateSettingsUI === 'function') {
+                updateSettingsUI();
+            } else {
+                // Manual toggle update
+                const toggle = document.getElementById('minimapToggle');
+                if (toggle) {
+                    toggle.classList.toggle('active', gameSettings.showMinimap);
+                }
+            }
         };
 
         window.toggleGraphics = function() {
+            console.log('🎨 TOGGLE GRAPHICS CALLED!');
             gameSettings.enhancedGraphics = !gameSettings.enhancedGraphics;
-            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+            console.log('Enhanced graphics now:', gameSettings.enhancedGraphics);
+            if (typeof updateSettingsUI === 'function') {
+                updateSettingsUI();
+            } else {
+                // Manual toggle update
+                const toggle = document.getElementById('graphicsToggle');
+                if (toggle) {
+                    toggle.classList.toggle('active', gameSettings.enhancedGraphics);
+                }
+            }
         };
 
         window.toggleVibration = function() {
+            console.log('📳 TOGGLE VIBRATION CALLED!');
             gameSettings.vibrationEnabled = !gameSettings.vibrationEnabled;
-            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+            console.log('Vibration enabled now:', gameSettings.vibrationEnabled);
+            if (typeof updateSettingsUI === 'function') {
+                updateSettingsUI();
+            } else {
+                // Manual toggle update
+                const toggle = document.getElementById('vibrationToggle');
+                if (toggle) {
+                    toggle.classList.toggle('active', gameSettings.vibrationEnabled);
+                }
+            }
         };
 
         window.applySettings = function() {
             console.log('✅ APPLY SETTINGS CALLED!');
+            console.log('Current settings:', gameSettings);
             if (typeof applySettingsInternal === 'function') {
                 applySettingsInternal();
+            } else {
+                // Manual apply
+                const mobileControls = document.querySelector('.mobile-controls');
+                if (mobileControls) {
+                    mobileControls.className = gameSettings.leftHanded ? 
+                        'mobile-controls controls-right' : 'mobile-controls controls-left';
+                    console.log('Applied control layout:', gameSettings.leftHanded ? 'right' : 'left');
+                }
+                
+                const minimap = document.getElementById('minimap');
+                if (minimap) {
+                    minimap.style.display = gameSettings.showMinimap ? 'block' : 'none';
+                    console.log('Applied minimap visibility:', gameSettings.showMinimap);
+                }
+                
+                if (typeof showMessage === 'function') {
+                    showMessage(`⚙️ Settings Applied! Controls: ${gameSettings.leftHanded ? 'Right-Hand' : 'Left-Hand'}`, 2000);
+                }
             }
         };
 
