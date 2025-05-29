@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+// Simplified iOS mobile controls initialization
+        function initMobileControls() {
+            console.log('🕹️ iOS Mobile Controls Init...');
+            
+            const shouldUseMobile = isiOS || isMobile || 'ontouchstart' in window;
+            console.log('iOS device detected:', isiOS, 'Should use mobile:', shouldUseMobile);
+            
+            if (shouldUseMobile) {
+                // Force show mobile controls
+                const mobileControlsDiv = document.querySelector('.mobile-controls');
+                if (mobileControlsDiv) {
+                    mobileControlsDiv.style.display = 'block';
+                    mobileControlsDiv.style.visibility = 'visible';
+                    mobileControlsDiv.style.pointerEvents = 'auto';
+                    
+                    // Apply correct positioning class
+                    mobileControlsDiv.classList.remove('controls-left', 'controls-right');
+                    const controlClass = gameSettings.leftHanded ? 'controls-right' : 'controls-left';
+                    mobileControlsDiv.classList.add(controlClass);
+                    
+                    console.log('✅ Mobile controls visible with class:', controlClass);
+                    
+                    // Use iOS-specific touch handling
+                    if (isiOS) {
+                        setupIOSTouchHandling();
+                    } else {
+                        // Fallback for other mobile devices
+                        setupStandardTouchHandling();
+                    }
+                } else {
+                    console.error('❌ Mobile controls div not found');
+                }
+            }
+        }
+
+        // Fallback for non-iOS devices
+        function setupStandardTouchHandling() {
+            console.log('📱 Setting up standard touch handling...');
+            // Simplified standard touch handling would go here
+        }<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
