@@ -654,6 +654,10 @@
             vibrationEnabled: true
         };
 
+        // Game timing
+        let lastTime = 0;
+        let animationId = null;
+
         // Load settings from localStorage if available
         function loadSettings() {
             try {
