@@ -707,16 +707,19 @@
             console.log('⚙️ TOGGLE SETTINGS CALLED!');
             const panel = document.getElementById('settingsPanel');
             if (panel) {
-                const isVisible = panel.style.display === 'block';
+                const isVisible = panel.classList.contains('show') || panel.style.display === 'block';
                 console.log('Panel currently visible:', isVisible);
                 
                 if (isVisible) {
+                    panel.classList.remove('show');
                     panel.style.display = 'none';
                     console.log('✅ Settings panel closed');
                 } else {
+                    panel.classList.add('show');
                     panel.style.display = 'block';
                     panel.style.visibility = 'visible';
                     panel.style.opacity = '1';
+                    panel.style.zIndex = '1000';
                     console.log('✅ Settings panel opened');
                     
                     if (typeof updateSettingsUI === 'function') {
@@ -724,7 +727,7 @@
                     }
                     
                     if (gameState === 'playing' && typeof togglePause === 'function') {
-                        togglePause();
+                        // Don't pause on settings open for now
                     }
                 }
             } else {
@@ -775,6 +778,7 @@
             console.log('❌ CLOSE SETTINGS CALLED!');
             const panel = document.getElementById('settingsPanel');
             if (panel) {
+                panel.classList.remove('show');
                 panel.style.display = 'none';
                 console.log('✅ Settings panel closed');
             }
