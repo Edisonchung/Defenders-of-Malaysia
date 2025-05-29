@@ -486,8 +486,8 @@
             COMBO x<span id="comboValue">0</span>
         </div>
 
-        <button class="pause-btn" id="pauseBtn">⏸</button>
-        <button class="settings-btn" id="settingsBtn">⚙️</button>
+        <button class="pause-btn" id="pauseBtn" ontouchend="togglePause()" onclick="togglePause()">⏸</button>
+        <button class="settings-btn" id="settingsBtn" ontouchend="toggleSettings()" onclick="toggleSettings()">⚙️</button>
 
         <div id="startScreen" class="start-screen">
             <h2>DEFENDERS OF MALAYSIA</h2>
@@ -495,7 +495,7 @@
             <p>New Features: Power-ups, Shield System, Combo Multipliers!</p>
             <p class="desktop-controls" style="display: block;">WASD/Arrows: Move | SPACE: Shoot | X: Special Attack</p>
             <p class="mobile-controls-text" style="display: none;">Joystick: Move | Fire: Shoot | Special: Super Attack</p>
-            <button class="start-btn" id="startBtn">MULA MISI!</button>
+            <button class="start-btn" id="startBtn" ontouchend="startGame()" onclick="startGame()">MULA MISI!</button>
         </div>
 
         <div id="gameOverScreen" class="game-over" style="display: none;">
@@ -503,7 +503,7 @@
             <p>The Twin Towers have fallen...</p>
             <p>Final Score: <span id="finalScore">0</span></p>
             <p>Highest Combo: <span id="finalCombo">0</span></p>
-            <button class="restart-btn" id="restartBtn">CUBA LAGI!</button>
+            <button class="restart-btn" id="restartBtn" ontouchend="restartGame()" onclick="restartGame()">CUBA LAGI!</button>
         </div>
 
         <div class="settings-panel" id="settingsPanel">
@@ -514,7 +514,7 @@
                     <div class="setting-label">Right-Handed Mode</div>
                     <div class="setting-description">Joystick on right, fire buttons on left</div>
                 </div>
-                <div class="toggle-switch active" id="leftHandedToggle">
+                <div class="toggle-switch active" id="leftHandedToggle" ontouchend="toggleLeftHanded()" onclick="toggleLeftHanded()">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -524,7 +524,7 @@
                     <div class="setting-label">Show Minimap</div>
                     <div class="setting-description">Display tactical minimap</div>
                 </div>
-                <div class="toggle-switch active" id="minimapToggle">
+                <div class="toggle-switch active" id="minimapToggle" ontouchend="toggleMinimap()" onclick="toggleMinimap()">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -534,7 +534,7 @@
                     <div class="setting-label">Enhanced Graphics</div>
                     <div class="setting-description">Better effects but may reduce performance</div>
                 </div>
-                <div class="toggle-switch active" id="graphicsToggle">
+                <div class="toggle-switch active" id="graphicsToggle" ontouchend="toggleGraphics()" onclick="toggleGraphics()">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -544,15 +544,15 @@
                     <div class="setting-label">Vibration</div>
                     <div class="setting-description">Haptic feedback on mobile devices</div>
                 </div>
-                <div class="toggle-switch active" id="vibrationToggle">
+                <div class="toggle-switch active" id="vibrationToggle" ontouchend="toggleVibration()" onclick="toggleVibration()">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             
             <div class="settings-buttons">
-                <button class="settings-btn-action" id="applyBtn">APPLY</button>
-                <button class="settings-btn-secondary" id="resetBtn">RESET</button>
-                <button class="settings-btn-secondary" id="closeBtn">CLOSE</button>
+                <button class="settings-btn-action" id="applyBtn" ontouchend="applySettings()" onclick="applySettings()">APPLY</button>
+                <button class="settings-btn-secondary" id="resetBtn" ontouchend="resetSettings()" onclick="resetSettings()">RESET</button>
+                <button class="settings-btn-secondary" id="closeBtn" ontouchend="closeSettings()" onclick="closeSettings()">CLOSE</button>
             </div>
         </div>
 
@@ -654,9 +654,171 @@
             vibrationEnabled: true
         };
 
-        // Game timing
-        let lastTime = 0;
-        let animationId = null;
+        // GLOBAL FUNCTIONS - MOVED TO VERY TOP FOR IMMEDIATE ACCESS
+        window.startGame = function() {
+            console.log('🎮 START GAME CALLED!');
+            
+            // Cancel any existing animation
+            if (typeof animationId !== 'undefined' && animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Set game state first
+            gameState = 'playing';
+            
+            // Hide start screen
+            const startScreen = document.getElementById('startScreen');
+            if (startScreen) {
+                startScreen.style.display = 'none';
+                console.log('✅ Start screen hidden');
+            }
+            
+            // Initialize game
+            try {
+                if (typeof initGame === 'function') {
+                    initGame();
+                    console.log('✅ Game initialized');
+                } else {
+                    console.error('❌ initGame function not found');
+                }
+                
+                // Initialize mobile controls
+                if (typeof initMobileControls === 'function') {
+                    initMobileControls();
+                    console.log('✅ Mobile controls initialized');
+                }
+                
+                // Start game loop
+                if (typeof gameLoop === 'function') {
+                    lastTime = performance.now();
+                    gameLoop();
+                    console.log('✅ Game loop started');
+                } else {
+                    console.error('❌ gameLoop function not found');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error starting game:', error);
+            }
+        };
+
+        window.toggleSettings = function() {
+            console.log('⚙️ TOGGLE SETTINGS CALLED!');
+            const panel = document.getElementById('settingsPanel');
+            if (panel) {
+                const isVisible = panel.style.display === 'block';
+                console.log('Panel currently visible:', isVisible);
+                
+                if (isVisible) {
+                    panel.style.display = 'none';
+                    console.log('✅ Settings panel closed');
+                } else {
+                    panel.style.display = 'block';
+                    panel.style.visibility = 'visible';
+                    panel.style.opacity = '1';
+                    console.log('✅ Settings panel opened');
+                    
+                    if (typeof updateSettingsUI === 'function') {
+                        updateSettingsUI();
+                    }
+                    
+                    if (gameState === 'playing' && typeof togglePause === 'function') {
+                        togglePause();
+                    }
+                }
+            } else {
+                console.error('❌ Settings panel not found');
+            }
+        };
+
+        window.togglePause = function() {
+            console.log('⏸️ TOGGLE PAUSE CALLED!');
+            if (gameState === 'playing') {
+                gameState = 'paused';
+                if (typeof animationId !== 'undefined' && animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                if (typeof showMessage === 'function') {
+                    showMessage("⏸️ GAME PAUSED ⏸️", 99999);
+                }
+                const pauseBtn = document.getElementById('pauseBtn');
+                if (pauseBtn) pauseBtn.textContent = '▶️';
+                console.log('✅ Game paused');
+            } else if (gameState === 'paused') {
+                gameState = 'playing';
+                stateMessageTimer = 0;
+                const pauseBtn = document.getElementById('pauseBtn');
+                if (pauseBtn) pauseBtn.textContent = '⏸️';
+                lastTime = performance.now();
+                if (typeof gameLoop === 'function') {
+                    gameLoop();
+                }
+                console.log('✅ Game resumed');
+            }
+        };
+
+        window.restartGame = function() {
+            console.log('🔄 RESTART GAME CALLED!');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            if (gameOverScreen) {
+                gameOverScreen.style.display = 'none';
+            }
+            if (typeof achievements !== 'undefined') {
+                achievements.clear();
+            }
+            window.startGame();
+        };
+
+        window.closeSettings = function() {
+            console.log('❌ CLOSE SETTINGS CALLED!');
+            const panel = document.getElementById('settingsPanel');
+            if (panel) {
+                panel.style.display = 'none';
+                console.log('✅ Settings panel closed');
+            }
+        };
+
+        window.toggleLeftHanded = function() {
+            console.log('🔄 TOGGLE LEFT HANDED CALLED!');
+            gameSettings.leftHanded = !gameSettings.leftHanded;
+            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+        };
+
+        window.toggleMinimap = function() {
+            gameSettings.showMinimap = !gameSettings.showMinimap;
+            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+        };
+
+        window.toggleGraphics = function() {
+            gameSettings.enhancedGraphics = !gameSettings.enhancedGraphics;
+            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+        };
+
+        window.toggleVibration = function() {
+            gameSettings.vibrationEnabled = !gameSettings.vibrationEnabled;
+            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+        };
+
+        window.applySettings = function() {
+            console.log('✅ APPLY SETTINGS CALLED!');
+            if (typeof applySettingsInternal === 'function') {
+                applySettingsInternal();
+            }
+        };
+
+        window.resetSettings = function() {
+            console.log('🔄 RESET SETTINGS CALLED!');
+            gameSettings = {
+                leftHanded: true,
+                showMinimap: true,
+                enhancedGraphics: true,
+                vibrationEnabled: true
+            };
+            if (typeof updateSettingsUI === 'function') updateSettingsUI();
+            if (typeof applySettingsInternal === 'function') applySettingsInternal();
+        };
 
         // Load settings from localStorage if available
         function loadSettings() {
