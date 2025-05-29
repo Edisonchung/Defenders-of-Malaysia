@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Defenders of Malaysia">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Defenders of Malaysia - Enhanced</title>
     <style>
         * {
@@ -27,18 +23,12 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            min-height: -webkit-fill-available; /* iOS fix */
             font-family: 'Arial', sans-serif;
             color: white;
             overflow: hidden;
             position: fixed;
             width: 100%;
             height: 100%;
-            /* iOS safe area support */
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
         }
 
         .game-container {
@@ -52,13 +42,8 @@
             height: 100%;
             max-width: 800px;
             max-height: 600px;
-            /* iOS-specific fixes */
-            -webkit-overflow-scrolling: touch;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
         }
 
-        /* iOS device specific styles */
         @media (max-width: 768px) {
             .game-container {
                 border-radius: 0;
@@ -67,24 +52,6 @@
                 max-height: 100vh;
                 width: 100vw;
                 height: 100vh;
-                /* iOS viewport height fix */
-                height: -webkit-fill-available;
-            }
-        }
-
-        /* iPhone specific landscape adjustments */
-        @media screen and (max-width: 896px) and (orientation: landscape) {
-            .game-container {
-                height: 100vh;
-                height: -webkit-fill-available;
-            }
-        }
-
-        /* iPad specific adjustments */
-        @media screen and (min-width: 768px) and (max-width: 1024px) {
-            .game-container {
-                max-width: 90vw;
-                max-height: 90vh;
             }
         }
 
@@ -94,11 +61,6 @@
             background: radial-gradient(ellipse at center, #001122 0%, #000811 100%);
             width: 100%;
             height: 100%;
-            /* iOS optimizations */
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
         }
 
         @media (max-width: 768px) {
@@ -239,22 +201,6 @@
             border: 2px solid rgba(0, 255, 255, 0.3);
             border-radius: 50%;
             touch-action: none;
-            /* iOS optimizations */
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-            /* Prevent iOS scroll bounce */
-            overscroll-behavior: contain;
-        }
-
-        /* iPad larger joystick */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .joystick-area {
-                width: 120px;
-                height: 120px;
-                bottom: 30px;
-                left: 30px;
-            }
         }
 
         .joystick-knob {
@@ -269,17 +215,6 @@
             transform: translate(-50%, -50%);
             transition: all 0.1s ease;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-            /* iOS touch improvements */
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-
-        /* iPad larger knob */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .joystick-knob {
-                width: 50px;
-                height: 50px;
-            }
         }
 
         .fire-button {
@@ -379,7 +314,6 @@
             pointer-events: none;
         }
 
-        /* Orientation message - iOS specific */
         .orientation-message {
             position: fixed;
             top: 0;
@@ -394,28 +328,14 @@
             flex-direction: column;
             text-align: center;
             padding: 20px;
-            /* iOS safe area */
-            padding-top: max(20px, env(safe-area-inset-top));
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
         }
 
-        /* Show orientation message on iPhone in portrait */
-        @media screen and (orientation: portrait) and (max-width: 896px) {
+        @media screen and (orientation: portrait) and (max-width: 768px) {
             .orientation-message {
                 display: flex;
             }
             .game-container {
                 display: none;
-            }
-        }
-
-        /* Don't show on iPad - it can play in portrait */
-        @media screen and (orientation: portrait) and (min-width: 768px) and (max-width: 1024px) {
-            .orientation-message {
-                display: none;
-            }
-            .game-container {
-                display: block;
             }
         }
 
@@ -486,8 +406,7 @@
             COMBO x<span id="comboValue">0</span>
         </div>
 
-        <button class="pause-btn" id="pauseBtn">⏸</button>
-        <button class="settings-btn" id="settingsBtn">⚙️</button>
+        <button class="pause-btn" onclick="togglePause()">⏸</button>
 
         <div id="startScreen" class="start-screen">
             <h2>DEFENDERS OF MALAYSIA</h2>
@@ -504,56 +423,6 @@
             <p>Final Score: <span id="finalScore">0</span></p>
             <p>Highest Combo: <span id="finalCombo">0</span></p>
             <button class="restart-btn" onclick="restartGame()">CUBA LAGI!</button>
-        </div>
-
-        <div class="settings-panel" id="settingsPanel">
-            <h3>⚙️ GAME SETTINGS</h3>
-            
-            <div class="setting-item">
-                <div>
-                    <div class="setting-label">Right-Handed Mode</div>
-                    <div class="setting-description">Joystick on right, fire buttons on left</div>
-                </div>
-                <div class="toggle-switch active" id="leftHandedToggle">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-            
-            <div class="setting-item">
-                <div>
-                    <div class="setting-label">Show Minimap</div>
-                    <div class="setting-description">Display tactical minimap</div>
-                </div>
-                <div class="toggle-switch active" id="minimapToggle">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-            
-            <div class="setting-item">
-                <div>
-                    <div class="setting-label">Enhanced Graphics</div>
-                    <div class="setting-description">Better effects but may reduce performance</div>
-                </div>
-                <div class="toggle-switch active" id="graphicsToggle">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-            
-            <div class="setting-item">
-                <div>
-                    <div class="setting-label">Vibration</div>
-                    <div class="setting-description">Haptic feedback on mobile devices</div>
-                </div>
-                <div class="toggle-switch active" id="vibrationToggle">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-            
-            <div class="settings-buttons">
-                <button class="settings-btn-action" id="applyBtn">APPLY</button>
-                <button class="settings-btn-secondary" id="resetBtn">RESET</button>
-                <button class="settings-btn-secondary" id="closeBtn">CLOSE</button>
-            </div>
         </div>
 
         <div class="achievement" id="achievement"></div>
@@ -573,17 +442,10 @@
     </div>
 
     <script>
-        // Enhanced mobile detection for iOS devices
-        const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isAndroid = /Android/.test(navigator.userAgent);
-        const isMobile = isiOS || isAndroid || 
-                         /webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+        // Enhanced mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                          (window.innerWidth <= 768) || 
                          ('ontouchstart' in window && window.innerHeight < window.innerWidth);
-        
-        // iOS specific detection
-        const isiPad = isiOS && window.innerWidth >= 768;
-        const isiPhone = isiOS && window.innerWidth < 768;
         
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -645,43 +507,6 @@
         let joystickMovement = { x: 0, y: 0 };
         let fireButtonPressed = false;
         let specialButtonPressed = false;
-        
-        // Game settings - Default to right-hand controls
-        let gameSettings = {
-            leftHanded: true,  // True means controls on right (joystick on right, fire on left)
-            showMinimap: true,
-            enhancedGraphics: true,
-            vibrationEnabled: true
-        };
-
-        // Game timing
-        let lastTime = 0;
-        let animationId = null;
-
-        // Load settings from localStorage if available
-        function loadSettings() {
-            try {
-                const saved = localStorage.getItem('malaysiDefendersSettings');
-                if (saved) {
-                    gameSettings = { ...gameSettings, ...JSON.parse(saved) };
-                    updateSettingsUI();
-                    applySettings();
-                }
-            } catch (error) {
-                console.log('Could not load settings:', error);
-            }
-        }
-
-        // Save settings to localStorage
-        function saveSettings() {
-            try {
-                localStorage.setItem('malaysiDefendersSettings', JSON.stringify(gameSettings));
-            } catch (error) {
-                console.log('Could not save settings:', error);
-            }
-        }
-
-
 
         // Enhanced weapon system
         const weaponTypes = {
@@ -965,8 +790,7 @@
             
             showMessage("🌟 SPECIAL ATTACK ACTIVATED! 🌟", 1500);
             
-            // Vibration based on settings
-            if (gameSettings.vibrationEnabled && (isMobile || isiOS) && navigator.vibrate) {
+            if (isMobile && navigator.vibrate) {
                 navigator.vibrate([100, 50, 100, 50, 200]);
             }
         }
@@ -1169,8 +993,7 @@
             
             createExplosion(powerUp.x, powerUp.y, powerUp.color);
             
-            // Vibration based on settings
-            if (gameSettings.vibrationEnabled && (isMobile || isiOS) && navigator.vibrate) {
+            if (isMobile && navigator.vibrate) {
                 navigator.vibrate(100);
             }
             
@@ -1743,61 +1566,147 @@
             }
         }
 
-        // Enhanced minimap with safety checks and settings
+        // Enhanced minimap
         function drawMinimap() {
-            if (!gameSettings.showMinimap) return;
+            const minimap = document.getElementById('minimap');
+            const minimapCtx = minimap.getContext('2d');
+            const scaleX = 120 / canvas.width;
+            const scaleY = 90 / canvas.height;
             
-            try {
-                const minimapEl = document.getElementById('minimap');
-                if (!minimapEl) return;
-                
-                const minimapCtx = minimapEl.getContext('2d');
-                if (!minimapCtx) return;
-                
-                const scaleX = 120 / canvas.width;
-                const scaleY = 90 / canvas.height;
-                
-                minimapCtx.clearRect(0, 0, 120, 90);
-                
-                // Background
-                minimapCtx.fillStyle = 'rgba(0, 20, 40, 0.8)';
-                minimapCtx.fillRect(0, 0, 120, 90);
-                
-                // Player
-                if (player && player.x !== undefined && player.y !== undefined) {
-                    minimapCtx.fillStyle = '#00ffff';
-                    minimapCtx.fillRect(player.x * scaleX - 1, player.y * scaleY - 1, 2, 2);
+            minimapCtx.clearRect(0, 0, 120, 90);
+            
+            // Background
+            minimapCtx.fillStyle = 'rgba(0, 20, 40, 0.8)';
+            minimapCtx.fillRect(0, 0, 120, 90);
+            
+            // Player
+            minimapCtx.fillStyle = '#00ffff';
+            minimapCtx.fillRect(player.x * scaleX - 1, player.y * scaleY - 1, 2, 2);
+            
+            // Enemies
+            minimapCtx.fillStyle = '#ff4444';
+            enemies.forEach(enemy => {
+                minimapCtx.fillRect(enemy.x * scaleX - 1, enemy.y * scaleY - 1, 2, 2);
+            });
+            
+            // Power-ups
+            minimapCtx.fillStyle = '#FFD700';
+            powerUps.forEach(powerUp => {
+                minimapCtx.fillRect(powerUp.x * scaleX - 1, powerUp.y * scaleY - 1, 2, 2);
+            });
+            
+            // Landmarks
+            landmarks.forEach(landmark => {
+                if (!landmark.destroyed) {
+                    minimapCtx.fillStyle = landmark.health > landmark.maxHealth * 0.5 ? '#00ff00' : '#ff8800';
+                    minimapCtx.fillRect(landmark.x * scaleX - 2, landmark.y * scaleY - 2, 4, 4);
                 }
-                
-                // Enemies
-                minimapCtx.fillStyle = '#ff4444';
-                enemies.forEach(enemy => {
-                    if (enemy && enemy.x !== undefined && enemy.y !== undefined) {
-                        minimapCtx.fillRect(enemy.x * scaleX - 1, enemy.y * scaleY - 1, 2, 2);
-                    }
-                });
-                
-                // Power-ups
-                minimapCtx.fillStyle = '#FFD700';
-                powerUps.forEach(powerUp => {
-                    if (powerUp && powerUp.x !== undefined && powerUp.y !== undefined) {
-                        minimapCtx.fillRect(powerUp.x * scaleX - 1, powerUp.y * scaleY - 1, 2, 2);
-                    }
-                });
-                
-                // Landmarks
-                landmarks.forEach(landmark => {
-                    if (landmark && !landmark.destroyed && landmark.x !== undefined && landmark.y !== undefined) {
-                        minimapCtx.fillStyle = landmark.health > landmark.maxHealth * 0.5 ? '#00ff00' : '#ff8800';
-                        minimapCtx.fillRect(landmark.x * scaleX - 2, landmark.y * scaleY - 2, 4, 4);
-                    }
-                });
-            } catch (error) {
-                console.warn('Minimap draw error:', error);
-            }
+            });
         }
 
+        // Mobile controls initialization
+        function initMobileControls() {
+            const shouldUseMobile = isMobile || window.innerWidth <= 768 || window.innerHeight < 500;
+            
+            if (shouldUseMobile) {
+                document.querySelectorAll('.desktop-controls').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.mobile-controls-text').forEach(el => el.style.display = 'block');
+                
+                const mobileControlsDiv = document.querySelector('.mobile-controls');
+                if (mobileControlsDiv) {
+                    mobileControlsDiv.style.display = 'block';
+                }
+                
+                const joystick = document.getElementById('joystick');
+                const joystickKnob = document.getElementById('joystickKnob');
+                const fireButton = document.getElementById('fireButton');
+                const specialButton = document.getElementById('specialButton');
 
+                // Joystick controls
+                function handleJoystickStart(e) {
+                    e.preventDefault();
+                    joystickActive = true;
+                    const rect = joystick.getBoundingClientRect();
+                    joystickCenter.x = rect.left + rect.width / 2;
+                    joystickCenter.y = rect.top + rect.height / 2;
+                    
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }
+
+                function handleJoystickMove(e) {
+                    if (!joystickActive) return;
+                    e.preventDefault();
+                    
+                    const touch = e.touches ? e.touches[0] : e;
+                    const deltaX = touch.clientX - joystickCenter.x;
+                    const deltaY = touch.clientY - joystickCenter.y;
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const maxDistance = 35;
+
+                    if (distance <= maxDistance) {
+                        joystickMovement.x = deltaX / maxDistance;
+                        joystickMovement.y = deltaY / maxDistance;
+                        joystickKnob.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
+                    } else {
+                        const angle = Math.atan2(deltaY, deltaX);
+                        const limitedX = Math.cos(angle) * maxDistance;
+                        const limitedY = Math.sin(angle) * maxDistance;
+                        joystickMovement.x = limitedX / maxDistance;
+                        joystickMovement.y = limitedY / maxDistance;
+                        joystickKnob.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+                    }
+                }
+
+                function handleJoystickEnd(e) {
+                    e.preventDefault();
+                    joystickActive = false;
+                    joystickMovement.x = 0;
+                    joystickMovement.y = 0;
+                    joystickKnob.style.transform = 'translate(-50%, -50%)';
+                }
+
+                // Touch events for joystick
+                joystick.addEventListener('touchstart', handleJoystickStart, { passive: false });
+                joystick.addEventListener('touchmove', handleJoystickMove, { passive: false });
+                joystick.addEventListener('touchend', handleJoystickEnd, { passive: false });
+
+                // Fire button
+                function handleFireStart(e) {
+                    e.preventDefault();
+                    fireButtonPressed = true;
+                    fireButton.style.transform = 'scale(0.9)';
+                    if (navigator.vibrate) navigator.vibrate(30);
+                }
+
+                function handleFireEnd(e) {
+                    e.preventDefault();
+                    fireButtonPressed = false;
+                    fireButton.style.transform = 'scale(1)';
+                }
+
+                fireButton.addEventListener('touchstart', handleFireStart, { passive: false });
+                fireButton.addEventListener('touchend', handleFireEnd, { passive: false });
+
+                // Special button
+                function handleSpecialStart(e) {
+                    e.preventDefault();
+                    if (specialCooldown <= 0) {
+                        specialButtonPressed = true;
+                        specialButton.style.transform = 'scale(0.9)';
+                        if (navigator.vibrate) navigator.vibrate(100);
+                    }
+                }
+
+                function handleSpecialEnd(e) {
+                    e.preventDefault();
+                    specialButtonPressed = false;
+                    specialButton.style.transform = 'scale(1)';
+                }
+
+                specialButton.addEventListener('touchstart', handleSpecialStart, { passive: false });
+                specialButton.addEventListener('touchend', handleSpecialEnd, { passive: false });
+            }
+        }
 
         // Enhanced level progression
         function checkLevelUp() {
@@ -1885,108 +1794,53 @@
             }
         }
 
-        // Enhanced game loop with proper timing
-        function gameLoop(currentTime = 0) {
-            if (gameState !== 'playing') {
-                animationId = null;
-                return;
-            }
+        // Enhanced game loop
+        function gameLoop() {
+            if (gameState !== 'playing') return;
 
-            const deltaTime = currentTime - lastTime;
-            lastTime = currentTime;
-
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            try {
-                // Update all systems
-                updateStars();
-                updatePlayer();
-                updateBullets();
-                spawnEnemy();
-                spawnPowerUp();
-                updateEnemies();
-                updatePowerUps();
-                updateParticles();
-                updateStateMessage();
-                updateCombo();
-                checkCollisions();
-                checkLevelUp();
-                checkWaveCompletion();
-                updateUI();
+            // Update all systems
+            updateStars();
+            updatePlayer();
+            updateBullets();
+            spawnEnemy();
+            spawnPowerUp();
+            updateEnemies();
+            updatePowerUps();
+            updateParticles();
+            updateStateMessage();
+            updateCombo();
+            checkCollisions();
+            checkLevelUp();
+            checkWaveCompletion();
+            updateUI();
 
-                // Draw everything
-                drawStars();
-                drawLandmarks();
-                drawPlayer();
-                drawBullets();
-                drawEnemies();
-                drawPowerUps();
-                drawParticles();
-                drawStateMessage();
-                drawMinimap();
-            } catch (error) {
-                console.error('Game loop error:', error);
-                // Continue anyway
-            }
+            // Draw everything
+            drawStars();
+            drawLandmarks();
+            drawPlayer();
+            drawBullets();
+            drawEnemies();
+            drawPowerUps();
+            drawParticles();
+            drawStateMessage();
+            drawMinimap();
 
-            animationId = requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop);
         }
 
         // Game control functions
         function startGame() {
-            console.log('Starting game...');
-            
-            // Cancel any existing animation
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-            
-            // Set game state first
             gameState = 'playing';
-            
-            // Hide start screen
-            const startScreen = document.getElementById('startScreen');
-            if (startScreen) {
-                startScreen.style.display = 'none';
-            }
-            
-            // Initialize game
-            try {
-                initGame();
-                console.log('Game initialized');
-                
-                // Initialize mobile controls
-                initMobileControls();
-                console.log('Mobile controls initialized');
-                
-                // Start game loop
-                lastTime = performance.now();
-                gameLoop();
-                console.log('Game loop started');
-                
-            } catch (error) {
-                console.error('Error starting game:', error);
-                // Fallback - try again
-                setTimeout(() => {
-                    initGame();
-                    initMobileControls();
-                    gameLoop();
-                }, 100);
-            }
+            document.getElementById('startScreen').style.display = 'none';
+            initGame();
+            initMobileControls();
+            gameLoop();
         }
 
         function gameOver() {
-            console.log('Game over');
             gameState = 'gameOver';
-            
-            // Cancel animation loop
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-            
             document.getElementById('finalScore').textContent = score.toLocaleString();
             document.getElementById('finalCombo').textContent = maxCombo;
             document.getElementById('gameOverScreen').style.display = 'block';
@@ -1997,7 +1851,6 @@
         }
 
         function restartGame() {
-            console.log('Restarting game');
             document.getElementById('gameOverScreen').style.display = 'none';
             achievements.clear();
             startGame();
@@ -2006,22 +1859,17 @@
         function togglePause() {
             if (gameState === 'playing') {
                 gameState = 'paused';
-                if (animationId) {
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
-                }
                 showMessage("⏸️ GAME PAUSED ⏸️", 99999);
                 document.querySelector('.pause-btn').textContent = '▶️';
             } else if (gameState === 'paused') {
                 gameState = 'playing';
                 stateMessageTimer = 0;
                 document.querySelector('.pause-btn').textContent = '⏸️';
-                lastTime = performance.now();
                 gameLoop();
             }
         }
 
-        // Event listeners with iOS optimizations
+        // Event listeners
         document.addEventListener('keydown', (e) => {
             keys[e.key] = true;
             if (e.key === 'Escape') togglePause();
@@ -2032,48 +1880,19 @@
             keys[e.key] = false;
         });
 
-        // Enhanced iOS touch handling
+        // Prevent zoom and context menu on mobile
         document.addEventListener('gesturestart', e => e.preventDefault());
-        document.addEventListener('gesturechange', e => e.preventDefault());
-        document.addEventListener('gestureend', e => e.preventDefault());
-        
-        // Prevent iOS zoom and context menu
         document.addEventListener('touchstart', function (e) {
             if (e.touches.length > 1) e.preventDefault();
         }, { passive: false });
-        
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // iOS double-tap zoom prevention
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function (event) {
             const now = Date.now();
             if (now - lastTouchEnd <= 300) event.preventDefault();
             lastTouchEnd = now;
         }, false);
-
-        // iOS viewport change handling
-        if (isiOS && window.visualViewport) {
-            window.visualViewport.addEventListener('resize', resizeCanvas);
-        }
-
-        // iOS orientation change handling
-        window.addEventListener('orientationchange', function() {
-            setTimeout(() => {
-                resizeCanvas();
-                if (gameState === 'playing') {
-                    // Force a render update
-                    requestAnimationFrame(() => {
-                        // Empty frame to trigger repaint
-                    });
-                }
-            }, 100);
-        });
-
-        // iOS web app status bar handling
-        if (isiOS && window.navigator.standalone) {
-            document.body.style.paddingTop = '44px'; // iOS status bar height
-        }
 
         // Initialize on load
         initGame();
