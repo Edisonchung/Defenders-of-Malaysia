@@ -511,10 +511,10 @@
             
             <div class="setting-item">
                 <div>
-                    <div class="setting-label">Left-Handed Mode</div>
-                    <div class="setting-description">Swap controls for left-handed players</div>
+                    <div class="setting-label">Right-Handed Mode</div>
+                    <div class="setting-description">Joystick on right, fire buttons on left</div>
                 </div>
-                <div class="toggle-switch" id="leftHandedToggle" onclick="toggleLeftHanded()">
+                <div class="toggle-switch active" id="leftHandedToggle" onclick="toggleLeftHanded()">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -646,9 +646,9 @@
         let fireButtonPressed = false;
         let specialButtonPressed = false;
         
-        // Game settings
+        // Game settings - Default to right-hand controls
         let gameSettings = {
-            leftHanded: false,
+            leftHanded: true,  // True means controls on right (joystick on right, fire on left)
             showMinimap: true,
             enhancedGraphics: true,
             vibrationEnabled: true
