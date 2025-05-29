@@ -706,32 +706,52 @@
         window.toggleSettings = function() {
             console.log('⚙️ TOGGLE SETTINGS CALLED!');
             const panel = document.getElementById('settingsPanel');
+            console.log('Panel element found:', !!panel);
+            
             if (panel) {
-                const isVisible = panel.classList.contains('show') || panel.style.display === 'block';
+                const isVisible = panel.classList.contains('show');
                 console.log('Panel currently visible:', isVisible);
+                console.log('Panel current display:', panel.style.display);
+                console.log('Panel current visibility:', panel.style.visibility);
                 
                 if (isVisible) {
+                    // Close panel
                     panel.classList.remove('show');
-                    panel.style.display = 'none';
-                    console.log('✅ Settings panel closed');
+                    setTimeout(() => {
+                        panel.style.display = 'none';
+                    }, 300);
+                    console.log('✅ Settings panel closing...');
                 } else {
-                    panel.classList.add('show');
+                    // Open panel - FORCE VISIBILITY
                     panel.style.display = 'block';
+                    panel.style.position = 'fixed';
+                    panel.style.top = '50%';
+                    panel.style.left = '50%';
+                    panel.style.transform = 'translate(-50%, -50%)';
+                    panel.style.zIndex = '9999';
                     panel.style.visibility = 'visible';
                     panel.style.opacity = '1';
-                    panel.style.zIndex = '1000';
-                    console.log('✅ Settings panel opened');
+                    panel.classList.add('show');
+                    
+                    console.log('✅ Settings panel forced open');
+                    console.log('Panel styles applied:', {
+                        display: panel.style.display,
+                        position: panel.style.position,
+                        zIndex: panel.style.zIndex,
+                        visibility: panel.style.visibility,
+                        opacity: panel.style.opacity
+                    });
                     
                     if (typeof updateSettingsUI === 'function') {
                         updateSettingsUI();
-                    }
-                    
-                    if (gameState === 'playing' && typeof togglePause === 'function') {
-                        // Don't pause on settings open for now
+                        console.log('Settings UI updated');
                     }
                 }
             } else {
-                console.error('❌ Settings panel not found');
+                console.error('❌ Settings panel element not found!');
+                // Try to find it by class
+                const panelByClass = document.querySelector('.settings-panel');
+                console.log('Panel found by class:', !!panelByClass);
             }
         };
 
@@ -779,7 +799,9 @@
             const panel = document.getElementById('settingsPanel');
             if (panel) {
                 panel.classList.remove('show');
-                panel.style.display = 'none';
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                }, 300);
                 console.log('✅ Settings panel closed');
             }
         };
