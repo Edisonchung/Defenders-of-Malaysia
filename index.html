@@ -487,6 +487,7 @@
         </div>
 
         <button class="pause-btn" onclick="togglePause()">⏸</button>
+        <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
 
         <div id="startScreen" class="start-screen">
             <h2>DEFENDERS OF MALAYSIA</h2>
@@ -503,6 +504,56 @@
             <p>Final Score: <span id="finalScore">0</span></p>
             <p>Highest Combo: <span id="finalCombo">0</span></p>
             <button class="restart-btn" onclick="restartGame()">CUBA LAGI!</button>
+        </div>
+
+        <div class="settings-panel" id="settingsPanel">
+            <h3>⚙️ GAME SETTINGS</h3>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Left-Handed Mode</div>
+                    <div class="setting-description">Swap controls for left-handed players</div>
+                </div>
+                <div class="toggle-switch" id="leftHandedToggle" onclick="toggleLeftHanded()">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Show Minimap</div>
+                    <div class="setting-description">Display tactical minimap</div>
+                </div>
+                <div class="toggle-switch active" id="minimapToggle" onclick="toggleMinimap()">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Enhanced Graphics</div>
+                    <div class="setting-description">Better effects but may reduce performance</div>
+                </div>
+                <div class="toggle-switch active" id="graphicsToggle" onclick="toggleGraphics()">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Vibration</div>
+                    <div class="setting-description">Haptic feedback on mobile devices</div>
+                </div>
+                <div class="toggle-switch active" id="vibrationToggle" onclick="toggleVibration()">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            
+            <div class="settings-buttons">
+                <button class="settings-btn-action" onclick="applySettings()">APPLY</button>
+                <button class="settings-btn-secondary" onclick="resetSettings()">RESET</button>
+                <button class="settings-btn-secondary" onclick="closeSettings()">CLOSE</button>
+            </div>
         </div>
 
         <div class="achievement" id="achievement"></div>
@@ -595,9 +646,36 @@
         let fireButtonPressed = false;
         let specialButtonPressed = false;
         
-        // Game timing
-        let lastTime = 0;
-        let animationId = null;
+        // Game settings
+        let gameSettings = {
+            leftHanded: false,
+            showMinimap: true,
+            enhancedGraphics: true,
+            vibrationEnabled: true
+        };
+
+        // Load settings from localStorage if available
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('malaysiDefendersSettings');
+                if (saved) {
+                    gameSettings = { ...gameSettings, ...JSON.parse(saved) };
+                    updateSettingsUI();
+                    applySettings();
+                }
+            } catch (error) {
+                console.log('Could not load settings:', error);
+            }
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            try {
+                localStorage.setItem('malaysiDefendersSettings', JSON.stringify(gameSettings));
+            } catch (error) {
+                console.log('Could not save settings:', error);
+            }
+        }
 
         // Enhanced weapon system
         const weaponTypes = {
@@ -881,7 +959,8 @@
             
             showMessage("🌟 SPECIAL ATTACK ACTIVATED! 🌟", 1500);
             
-            if (isMobile && navigator.vibrate) {
+            // Vibration based on settings
+            if (gameSettings.vibrationEnabled && (isMobile || isiOS) && navigator.vibrate) {
                 navigator.vibrate([100, 50, 100, 50, 200]);
             }
         }
@@ -1084,7 +1163,8 @@
             
             createExplosion(powerUp.x, powerUp.y, powerUp.color);
             
-            if (isMobile && navigator.vibrate) {
+            // Vibration based on settings
+            if (gameSettings.vibrationEnabled && (isMobile || isiOS) && navigator.vibrate) {
                 navigator.vibrate(100);
             }
             
@@ -1657,8 +1737,10 @@
             }
         }
 
-        // Enhanced minimap with safety checks
+        // Enhanced minimap with safety checks and settings
         function drawMinimap() {
+            if (!gameSettings.showMinimap) return;
+            
             try {
                 const minimapEl = document.getElementById('minimap');
                 if (!minimapEl) return;
