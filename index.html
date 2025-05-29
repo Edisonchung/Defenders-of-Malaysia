@@ -594,6 +594,10 @@
         let joystickMovement = { x: 0, y: 0 };
         let fireButtonPressed = false;
         let specialButtonPressed = false;
+        
+        // Game timing
+        let lastTime = 0;
+        let animationId = null;
 
         // Enhanced weapon system
         const weaponTypes = {
@@ -1653,42 +1657,56 @@
             }
         }
 
-        // Enhanced minimap
+        // Enhanced minimap with safety checks
         function drawMinimap() {
-            const minimap = document.getElementById('minimap');
-            const minimapCtx = minimap.getContext('2d');
-            const scaleX = 120 / canvas.width;
-            const scaleY = 90 / canvas.height;
-            
-            minimapCtx.clearRect(0, 0, 120, 90);
-            
-            // Background
-            minimapCtx.fillStyle = 'rgba(0, 20, 40, 0.8)';
-            minimapCtx.fillRect(0, 0, 120, 90);
-            
-            // Player
-            minimapCtx.fillStyle = '#00ffff';
-            minimapCtx.fillRect(player.x * scaleX - 1, player.y * scaleY - 1, 2, 2);
-            
-            // Enemies
-            minimapCtx.fillStyle = '#ff4444';
-            enemies.forEach(enemy => {
-                minimapCtx.fillRect(enemy.x * scaleX - 1, enemy.y * scaleY - 1, 2, 2);
-            });
-            
-            // Power-ups
-            minimapCtx.fillStyle = '#FFD700';
-            powerUps.forEach(powerUp => {
-                minimapCtx.fillRect(powerUp.x * scaleX - 1, powerUp.y * scaleY - 1, 2, 2);
-            });
-            
-            // Landmarks
-            landmarks.forEach(landmark => {
-                if (!landmark.destroyed) {
-                    minimapCtx.fillStyle = landmark.health > landmark.maxHealth * 0.5 ? '#00ff00' : '#ff8800';
-                    minimapCtx.fillRect(landmark.x * scaleX - 2, landmark.y * scaleY - 2, 4, 4);
+            try {
+                const minimapEl = document.getElementById('minimap');
+                if (!minimapEl) return;
+                
+                const minimapCtx = minimapEl.getContext('2d');
+                if (!minimapCtx) return;
+                
+                const scaleX = 120 / canvas.width;
+                const scaleY = 90 / canvas.height;
+                
+                minimapCtx.clearRect(0, 0, 120, 90);
+                
+                // Background
+                minimapCtx.fillStyle = 'rgba(0, 20, 40, 0.8)';
+                minimapCtx.fillRect(0, 0, 120, 90);
+                
+                // Player
+                if (player && player.x !== undefined && player.y !== undefined) {
+                    minimapCtx.fillStyle = '#00ffff';
+                    minimapCtx.fillRect(player.x * scaleX - 1, player.y * scaleY - 1, 2, 2);
                 }
-            });
+                
+                // Enemies
+                minimapCtx.fillStyle = '#ff4444';
+                enemies.forEach(enemy => {
+                    if (enemy && enemy.x !== undefined && enemy.y !== undefined) {
+                        minimapCtx.fillRect(enemy.x * scaleX - 1, enemy.y * scaleY - 1, 2, 2);
+                    }
+                });
+                
+                // Power-ups
+                minimapCtx.fillStyle = '#FFD700';
+                powerUps.forEach(powerUp => {
+                    if (powerUp && powerUp.x !== undefined && powerUp.y !== undefined) {
+                        minimapCtx.fillRect(powerUp.x * scaleX - 1, powerUp.y * scaleY - 1, 2, 2);
+                    }
+                });
+                
+                // Landmarks
+                landmarks.forEach(landmark => {
+                    if (landmark && !landmark.destroyed && landmark.x !== undefined && landmark.y !== undefined) {
+                        minimapCtx.fillStyle = landmark.health > landmark.maxHealth * 0.5 ? '#00ff00' : '#ff8800';
+                        minimapCtx.fillRect(landmark.x * scaleX - 2, landmark.y * scaleY - 2, 4, 4);
+                    }
+                });
+            } catch (error) {
+                console.warn('Minimap draw error:', error);
+            }
         }
 
         // Mobile controls initialization with iOS enhancements
@@ -1927,53 +1945,108 @@
             }
         }
 
-        // Enhanced game loop
-        function gameLoop() {
-            if (gameState !== 'playing') return;
+        // Enhanced game loop with proper timing
+        function gameLoop(currentTime = 0) {
+            if (gameState !== 'playing') {
+                animationId = null;
+                return;
+            }
 
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update all systems
-            updateStars();
-            updatePlayer();
-            updateBullets();
-            spawnEnemy();
-            spawnPowerUp();
-            updateEnemies();
-            updatePowerUps();
-            updateParticles();
-            updateStateMessage();
-            updateCombo();
-            checkCollisions();
-            checkLevelUp();
-            checkWaveCompletion();
-            updateUI();
+            try {
+                // Update all systems
+                updateStars();
+                updatePlayer();
+                updateBullets();
+                spawnEnemy();
+                spawnPowerUp();
+                updateEnemies();
+                updatePowerUps();
+                updateParticles();
+                updateStateMessage();
+                updateCombo();
+                checkCollisions();
+                checkLevelUp();
+                checkWaveCompletion();
+                updateUI();
 
-            // Draw everything
-            drawStars();
-            drawLandmarks();
-            drawPlayer();
-            drawBullets();
-            drawEnemies();
-            drawPowerUps();
-            drawParticles();
-            drawStateMessage();
-            drawMinimap();
+                // Draw everything
+                drawStars();
+                drawLandmarks();
+                drawPlayer();
+                drawBullets();
+                drawEnemies();
+                drawPowerUps();
+                drawParticles();
+                drawStateMessage();
+                drawMinimap();
+            } catch (error) {
+                console.error('Game loop error:', error);
+                // Continue anyway
+            }
 
-            requestAnimationFrame(gameLoop);
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         // Game control functions
         function startGame() {
+            console.log('Starting game...');
+            
+            // Cancel any existing animation
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Set game state first
             gameState = 'playing';
-            document.getElementById('startScreen').style.display = 'none';
-            initGame();
-            initMobileControls();
-            gameLoop();
+            
+            // Hide start screen
+            const startScreen = document.getElementById('startScreen');
+            if (startScreen) {
+                startScreen.style.display = 'none';
+            }
+            
+            // Initialize game
+            try {
+                initGame();
+                console.log('Game initialized');
+                
+                // Initialize mobile controls
+                initMobileControls();
+                console.log('Mobile controls initialized');
+                
+                // Start game loop
+                lastTime = performance.now();
+                gameLoop();
+                console.log('Game loop started');
+                
+            } catch (error) {
+                console.error('Error starting game:', error);
+                // Fallback - try again
+                setTimeout(() => {
+                    initGame();
+                    initMobileControls();
+                    gameLoop();
+                }, 100);
+            }
         }
 
         function gameOver() {
+            console.log('Game over');
             gameState = 'gameOver';
+            
+            // Cancel animation loop
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
             document.getElementById('finalScore').textContent = score.toLocaleString();
             document.getElementById('finalCombo').textContent = maxCombo;
             document.getElementById('gameOverScreen').style.display = 'block';
@@ -1984,6 +2057,7 @@
         }
 
         function restartGame() {
+            console.log('Restarting game');
             document.getElementById('gameOverScreen').style.display = 'none';
             achievements.clear();
             startGame();
@@ -1992,12 +2066,17 @@
         function togglePause() {
             if (gameState === 'playing') {
                 gameState = 'paused';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
                 showMessage("⏸️ GAME PAUSED ⏸️", 99999);
                 document.querySelector('.pause-btn').textContent = '▶️';
             } else if (gameState === 'paused') {
                 gameState = 'playing';
                 stateMessageTimer = 0;
                 document.querySelector('.pause-btn').textContent = '⏸️';
+                lastTime = performance.now();
                 gameLoop();
             }
         }
