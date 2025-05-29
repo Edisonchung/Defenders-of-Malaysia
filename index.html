@@ -869,26 +869,61 @@
         window.applySettings = function() {
             console.log('✅ APPLY SETTINGS CALLED!');
             console.log('Current settings:', gameSettings);
+            
+            // Apply settings using both methods
             if (typeof applySettingsInternal === 'function') {
                 applySettingsInternal();
-            } else {
-                // Manual apply
-                const mobileControls = document.querySelector('.mobile-controls');
-                if (mobileControls) {
-                    mobileControls.className = gameSettings.leftHanded ? 
-                        'mobile-controls controls-right' : 'mobile-controls controls-left';
-                    console.log('Applied control layout:', gameSettings.leftHanded ? 'right' : 'left');
+            }
+            
+            // Manual backup application
+            const mobileControls = document.querySelector('.mobile-controls');
+            if (mobileControls) {
+                // Clear existing classes
+                mobileControls.className = 'mobile-controls';
+                
+                // Add correct positioning class
+                if (gameSettings.leftHanded) {
+                    mobileControls.classList.add('controls-right');
+                    console.log('✅ Applied RIGHT-HAND controls (joystick on right)');
+                } else {
+                    mobileControls.classList.add('controls-left');
+                    console.log('✅ Applied LEFT-HAND controls (joystick on left)');
                 }
                 
-                const minimap = document.getElementById('minimap');
-                if (minimap) {
-                    minimap.style.display = gameSettings.showMinimap ? 'block' : 'none';
-                    console.log('Applied minimap visibility:', gameSettings.showMinimap);
-                }
+                console.log('Final mobile controls class:', mobileControls.className);
                 
-                if (typeof showMessage === 'function') {
-                    showMessage(`⚙️ Settings Applied! Controls: ${gameSettings.leftHanded ? 'Right-Hand' : 'Left-Hand'}`, 2000);
-                }
+                // Force show mobile controls
+                mobileControls.style.display = 'block';
+                mobileControls.style.visibility = 'visible';
+                
+                // Reinitialize controls with new positions
+                setTimeout(() => {
+                    console.log('🔄 Reinitializing mobile controls...');
+                    
+                    // Reset touch event listeners
+                    const joystick = document.getElementById('joystick');
+                    const fireButton = document.getElementById('fireButton');
+                    const specialButton = document.getElementById('specialButton');
+                    
+                    if (joystick) {
+                        console.log('Joystick position after class change:', window.getComputedStyle(joystick).position);
+                    }
+                    
+                    // Force re-init mobile controls
+                    initMobileControls();
+                }, 200);
+            }
+            
+            // Apply other settings
+            const minimap = document.getElementById('minimap');
+            if (minimap) {
+                minimap.style.display = gameSettings.showMinimap ? 'block' : 'none';
+                console.log('Applied minimap visibility:', gameSettings.showMinimap);
+            }
+            
+            if (typeof showMessage === 'function') {
+                const handMode = gameSettings.leftHanded ? 'Right-Hand (Joystick Right)' : 'Left-Hand (Joystick Left)';
+                showMessage(`⚙️ Controls: ${handMode}`, 2000);
             }
         };
 
