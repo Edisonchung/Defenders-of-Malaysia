@@ -1,55 +1,4 @@
-// Simplified iOS mobile controls initialization
-        function initMobileControls() {
-            console.log('🕹️ iOS Mobile Controls Init...');
-            
-            const shouldUseMobile = isiOS || isMobile || 'ontouchstart' in window;
-            console.log('iOS device detected:', isiOS, 'Should use mobile:', shouldUseMobile);
-            
-            if (shouldUseMobile) {
-                // Force show mobile controls with aggressive CSS
-                const mobileControlsDiv = document.querySelector('.mobile-controls');
-                if (mobileControlsDiv) {
-                    mobileControlsDiv.style.display = 'block';
-                    mobileControlsDiv.style.visibility = 'visible';
-                    mobileControlsDiv.style.pointerEvents = 'auto';
-                    mobileControlsDiv.style.position = 'absolute';
-                    mobileControlsDiv.style.bottom = '0';
-                    mobileControlsDiv.style.left = '0';
-                    mobileControlsDiv.style.right = '0';
-                    mobileControlsDiv.style.height = '150px';
-                    mobileControlsDiv.style.zIndex = '20';
-                    
-                    // Apply correct positioning class
-                    mobileControlsDiv.classList.remove('controls-left', 'controls-right');
-                    const controlClass = gameSettings.leftHanded ? 'controls-right' : 'controls-left';
-                    mobileControlsDiv.classList.add(controlClass);
-                    
-                    console.log('✅ Mobile controls visible with class:', controlClass);
-                    console.log('Mobile controls styles:', {
-                        display: mobileControlsDiv.style.display,
-                        visibility: mobileControlsDiv.style.visibility,
-                        position: mobileControlsDiv.style.position,
-                        zIndex: mobileControlsDiv.style.zIndex
-                    });
-                    
-                    // Use iOS-specific touch handling
-                    if (isiOS) {
-                        setupIOSTouchHandling();
-                    } else {
-                        // Fallback for other mobile devices
-                        setupStandardTouchHandling();
-                    }
-                } else {
-                    console.error('❌ Mobile controls div not found');
-                }
-            }
-        }
-
-        // Fallback for non-iOS devices
-        function setupStandardTouchHandling() {
-            console.log('📱 Setting up standard touch handling...');
-            // Simplified standard touch handling would go here
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -85,55 +34,11 @@
             position: fixed;
             width: 100%;
             height: 100%;
-            margin: 0;
-            padding: 0;
             /* iOS safe area support */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
-        }
-
-        /* iPhone fullscreen fixes */
-        @media (max-width: 896px) and (orientation: landscape) {
-            body {
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-            }
-            
-            .game-container {
-                width: 100vw !important;
-                height: 100vh !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                border: none !important;
-                border-radius: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
-            canvas {
-                width: 100vw !important;
-                height: 100vh !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                border-radius: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
         }
 
         .game-container {
@@ -153,7 +58,7 @@
             transform: translate3d(0, 0, 0);
         }
 
-        /* iOS device specific styles - ENHANCED */
+        /* iOS device specific styles */
         @media (max-width: 768px) {
             .game-container {
                 border-radius: 0;
@@ -167,22 +72,11 @@
             }
         }
 
-        /* iPhone specific landscape adjustments - FULLSCREEN */
-        @media (max-width: 896px) and (orientation: landscape) {
+        /* iPhone specific landscape adjustments */
+        @media screen and (max-width: 896px) and (orientation: landscape) {
             .game-container {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                max-width: none !important;
-                max-height: none !important;
-                border: none !important;
-                border-radius: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
+                height: 100vh;
+                height: -webkit-fill-available;
             }
         }
 
@@ -592,8 +486,8 @@
             COMBO x<span id="comboValue">0</span>
         </div>
 
-        <button class="pause-btn" id="pauseBtn" ontouchend="togglePause()" onclick="togglePause()">⏸</button>
-        <button class="settings-btn" id="settingsBtn" ontouchend="toggleSettings()" onclick="toggleSettings()">⚙️</button>
+        <button class="pause-btn" id="pauseBtn">⏸</button>
+        <button class="settings-btn" id="settingsBtn">⚙️</button>
 
         <div id="startScreen" class="start-screen">
             <h2>DEFENDERS OF MALAYSIA</h2>
@@ -601,7 +495,7 @@
             <p>New Features: Power-ups, Shield System, Combo Multipliers!</p>
             <p class="desktop-controls" style="display: block;">WASD/Arrows: Move | SPACE: Shoot | X: Special Attack</p>
             <p class="mobile-controls-text" style="display: none;">Joystick: Move | Fire: Shoot | Special: Super Attack</p>
-            <button class="start-btn" id="startBtn" ontouchend="startGame()" onclick="startGame()">MULA MISI!</button>
+            <button class="start-btn" onclick="startGame()">MULA MISI!</button>
         </div>
 
         <div id="gameOverScreen" class="game-over" style="display: none;">
@@ -609,56 +503,56 @@
             <p>The Twin Towers have fallen...</p>
             <p>Final Score: <span id="finalScore">0</span></p>
             <p>Highest Combo: <span id="finalCombo">0</span></p>
-            <button class="restart-btn" id="restartBtn" ontouchend="restartGame()" onclick="restartGame()">CUBA LAGI!</button>
+            <button class="restart-btn" onclick="restartGame()">CUBA LAGI!</button>
         </div>
 
         <div class="settings-panel" id="settingsPanel">
             <h3>⚙️ GAME SETTINGS</h3>
             
             <div class="setting-item">
-                <div class="setting-left">
+                <div>
                     <div class="setting-label">Right-Handed Mode</div>
                     <div class="setting-description">Joystick on right, fire buttons on left</div>
                 </div>
-                <div class="toggle-switch active" id="leftHandedToggle" ontouchend="toggleLeftHanded()" onclick="toggleLeftHanded()">
+                <div class="toggle-switch active" id="leftHandedToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             
             <div class="setting-item">
-                <div class="setting-left">
+                <div>
                     <div class="setting-label">Show Minimap</div>
                     <div class="setting-description">Display tactical minimap</div>
                 </div>
-                <div class="toggle-switch active" id="minimapToggle" ontouchend="toggleMinimap()" onclick="toggleMinimap()">
+                <div class="toggle-switch active" id="minimapToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             
             <div class="setting-item">
-                <div class="setting-left">
+                <div>
                     <div class="setting-label">Enhanced Graphics</div>
                     <div class="setting-description">Better effects but may reduce performance</div>
                 </div>
-                <div class="toggle-switch active" id="graphicsToggle" ontouchend="toggleGraphics()" onclick="toggleGraphics()">
+                <div class="toggle-switch active" id="graphicsToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             
             <div class="setting-item">
-                <div class="setting-left">
+                <div>
                     <div class="setting-label">Vibration</div>
                     <div class="setting-description">Haptic feedback on mobile devices</div>
                 </div>
-                <div class="toggle-switch active" id="vibrationToggle" ontouchend="toggleVibration()" onclick="toggleVibration()">
+                <div class="toggle-switch active" id="vibrationToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             
             <div class="settings-buttons">
-                <button class="settings-btn-action" id="applyBtn" ontouchend="applySettings()" onclick="applySettings()">APPLY</button>
-                <button class="settings-btn-secondary" id="resetBtn" ontouchend="resetSettings()" onclick="resetSettings()">RESET</button>
-                <button class="settings-btn-secondary" id="closeBtn" ontouchend="closeSettings()" onclick="closeSettings()">CLOSE</button>
+                <button class="settings-btn-action" id="applyBtn">APPLY</button>
+                <button class="settings-btn-secondary" id="resetBtn">RESET</button>
+                <button class="settings-btn-secondary" id="closeBtn">CLOSE</button>
             </div>
         </div>
 
@@ -760,338 +654,9 @@
             vibrationEnabled: true
         };
 
-        // GLOBAL FUNCTIONS - MOVED TO VERY TOP FOR IMMEDIATE ACCESS
-        window.startGame = function() {
-            console.log('🎮 START GAME CALLED!');
-            
-            // Force hide start screen first
-            const startScreen = document.getElementById('startScreen');
-            if (startScreen) {
-                startScreen.style.display = 'none';
-                console.log('✅ Start screen hidden');
-            }
-            
-            // Cancel any existing animation
-            if (typeof animationId !== 'undefined' && animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-            
-            // Set game state first
-            gameState = 'playing';
-            
-            // Initialize game
-            try {
-                if (typeof initGame === 'function') {
-                    initGame();
-                    console.log('✅ Game initialized');
-                } else {
-                    console.error('❌ initGame function not found');
-                }
-                
-                // Force show and initialize mobile controls for iOS
-                const mobileControlsDiv = document.querySelector('.mobile-controls');
-                if (mobileControlsDiv && (isiOS || isMobile)) {
-                    mobileControlsDiv.style.display = 'block';
-                    mobileControlsDiv.style.visibility = 'visible';
-                    mobileControlsDiv.style.pointerEvents = 'auto';
-                    console.log('✅ Mobile controls forced visible for iOS');
-                    
-                    // Initialize mobile controls
-                    if (typeof initMobileControls === 'function') {
-                        setTimeout(() => {
-                            initMobileControls();
-                            console.log('✅ Mobile controls initialized');
-                        }, 100);
-                    }
-                }
-                
-                // Start game loop
-                if (typeof gameLoop === 'function') {
-                    lastTime = performance.now();
-                    gameLoop();
-                    console.log('✅ Game loop started');
-                } else {
-                    console.error('❌ gameLoop function not found');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error starting game:', error);
-            }
-        };
-
-        window.toggleSettings = function() {
-            console.log('⚙️ TOGGLE SETTINGS CALLED!');
-            const panel = document.getElementById('settingsPanel');
-            console.log('Panel element found:', !!panel);
-            
-            if (panel) {
-                const isVisible = panel.classList.contains('show');
-                console.log('Panel currently visible:', isVisible);
-                console.log('Panel current display:', panel.style.display);
-                console.log('Panel current visibility:', panel.style.visibility);
-                
-                if (isVisible) {
-                    // Close panel
-                    panel.classList.remove('show');
-                    setTimeout(() => {
-                        panel.style.display = 'none';
-                    }, 300);
-                    console.log('✅ Settings panel closing...');
-                } else {
-                    // Open panel - FORCE VISIBILITY
-                    panel.style.display = 'block';
-                    panel.style.position = 'fixed';
-                    panel.style.top = '50%';
-                    panel.style.left = '50%';
-                    panel.style.transform = 'translate(-50%, -50%)';
-                    panel.style.zIndex = '9999';
-                    panel.style.visibility = 'visible';
-                    panel.style.opacity = '1';
-                    panel.classList.add('show');
-                    
-                    console.log('✅ Settings panel forced open');
-                    console.log('Panel styles applied:', {
-                        display: panel.style.display,
-                        position: panel.style.position,
-                        zIndex: panel.style.zIndex,
-                        visibility: panel.style.visibility,
-                        opacity: panel.style.opacity
-                    });
-                    
-                    if (typeof updateSettingsUI === 'function') {
-                        updateSettingsUI();
-                        console.log('Settings UI updated');
-                    }
-                }
-            } else {
-                console.error('❌ Settings panel element not found!');
-                // Try to find it by class
-                const panelByClass = document.querySelector('.settings-panel');
-                console.log('Panel found by class:', !!panelByClass);
-            }
-        };
-
-        window.togglePause = function() {
-            console.log('⏸️ TOGGLE PAUSE CALLED!');
-            if (gameState === 'playing') {
-                gameState = 'paused';
-                if (typeof animationId !== 'undefined' && animationId) {
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
-                }
-                if (typeof showMessage === 'function') {
-                    showMessage("⏸️ GAME PAUSED ⏸️", 99999);
-                }
-                const pauseBtn = document.getElementById('pauseBtn');
-                if (pauseBtn) pauseBtn.textContent = '▶️';
-                console.log('✅ Game paused');
-            } else if (gameState === 'paused') {
-                gameState = 'playing';
-                stateMessageTimer = 0;
-                const pauseBtn = document.getElementById('pauseBtn');
-                if (pauseBtn) pauseBtn.textContent = '⏸️';
-                lastTime = performance.now();
-                if (typeof gameLoop === 'function') {
-                    gameLoop();
-                }
-                console.log('✅ Game resumed');
-            }
-        };
-
-        window.restartGame = function() {
-            console.log('🔄 RESTART GAME CALLED!');
-            const gameOverScreen = document.getElementById('gameOverScreen');
-            if (gameOverScreen) {
-                gameOverScreen.style.display = 'none';
-            }
-            if (typeof achievements !== 'undefined') {
-                achievements.clear();
-            }
-            window.startGame();
-        };
-
-        window.closeSettings = function() {
-            console.log('❌ CLOSE SETTINGS CALLED!');
-            const panel = document.getElementById('settingsPanel');
-            if (panel) {
-                panel.classList.remove('show');
-                setTimeout(() => {
-                    panel.style.display = 'none';
-                }, 300);
-                console.log('✅ Settings panel closed');
-            }
-        };
-
-        window.toggleLeftHanded = function() {
-            console.log('🔄 TOGGLE LEFT HANDED CALLED!');
-            gameSettings.leftHanded = !gameSettings.leftHanded;
-            console.log('Left handed mode now:', gameSettings.leftHanded);
-            if (typeof updateSettingsUI === 'function') {
-                updateSettingsUI();
-            } else {
-                // Manual toggle update
-                const toggle = document.getElementById('leftHandedToggle');
-                if (toggle) {
-                    toggle.classList.toggle('active', gameSettings.leftHanded);
-                }
-            }
-        };
-
-        window.toggleMinimap = function() {
-            console.log('🗺️ TOGGLE MINIMAP CALLED!');
-            gameSettings.showMinimap = !gameSettings.showMinimap;
-            console.log('Show minimap now:', gameSettings.showMinimap);
-            if (typeof updateSettingsUI === 'function') {
-                updateSettingsUI();
-            } else {
-                // Manual toggle update
-                const toggle = document.getElementById('minimapToggle');
-                if (toggle) {
-                    toggle.classList.toggle('active', gameSettings.showMinimap);
-                }
-            }
-        };
-
-        window.toggleGraphics = function() {
-            console.log('🎨 TOGGLE GRAPHICS CALLED!');
-            gameSettings.enhancedGraphics = !gameSettings.enhancedGraphics;
-            console.log('Enhanced graphics now:', gameSettings.enhancedGraphics);
-            if (typeof updateSettingsUI === 'function') {
-                updateSettingsUI();
-            } else {
-                // Manual toggle update
-                const toggle = document.getElementById('graphicsToggle');
-                if (toggle) {
-                    toggle.classList.toggle('active', gameSettings.enhancedGraphics);
-                }
-            }
-        };
-
-        window.toggleVibration = function() {
-            console.log('📳 TOGGLE VIBRATION CALLED!');
-            gameSettings.vibrationEnabled = !gameSettings.vibrationEnabled;
-            console.log('Vibration enabled now:', gameSettings.vibrationEnabled);
-            if (typeof updateSettingsUI === 'function') {
-                updateSettingsUI();
-            } else {
-                // Manual toggle update
-                const toggle = document.getElementById('vibrationToggle');
-                if (toggle) {
-                    toggle.classList.toggle('active', gameSettings.vibrationEnabled);
-                }
-            }
-        };
-
-        window.applySettings = function() {
-            console.log('✅ APPLY SETTINGS CALLED!');
-            console.log('Current settings:', gameSettings);
-            
-            // Apply settings using both methods
-            if (typeof applySettingsInternal === 'function') {
-                applySettingsInternal();
-            }
-            
-            // Manual backup application
-            const mobileControls = document.querySelector('.mobile-controls');
-            if (mobileControls) {
-                // Clear existing classes
-                mobileControls.className = 'mobile-controls';
-                
-                // Add correct positioning class
-                if (gameSettings.leftHanded) {
-                    mobileControls.classList.add('controls-right');
-                    console.log('✅ Applied RIGHT-HAND controls (joystick on right)');
-                } else {
-                    mobileControls.classList.add('controls-left');
-                    console.log('✅ Applied LEFT-HAND controls (joystick on left)');
-                }
-                
-                console.log('Final mobile controls class:', mobileControls.className);
-                
-                // Force show mobile controls
-                mobileControls.style.display = 'block';
-                mobileControls.style.visibility = 'visible';
-                
-                // Reinitialize controls with new positions
-                setTimeout(() => {
-                    console.log('🔄 Reinitializing mobile controls...');
-                    
-                    // Reset touch event listeners
-                    const joystick = document.getElementById('joystick');
-                    const fireButton = document.getElementById('fireButton');
-                    const specialButton = document.getElementById('specialButton');
-                    
-                    if (joystick) {
-                        console.log('Joystick position after class change:', window.getComputedStyle(joystick).position);
-                    }
-                    
-                    // Force re-init mobile controls
-                    initMobileControls();
-                }, 200);
-            }
-            
-            // Apply other settings
-            const minimap = document.getElementById('minimap');
-            if (minimap) {
-                minimap.style.display = gameSettings.showMinimap ? 'block' : 'none';
-                console.log('Applied minimap visibility:', gameSettings.showMinimap);
-            }
-            
-            if (typeof showMessage === 'function') {
-                const handMode = gameSettings.leftHanded ? 'Right-Hand (Joystick Right)' : 'Left-Hand (Joystick Left)';
-                showMessage(`⚙️ Controls: ${handMode}`, 2000);
-            }
-        };
-
-        window.resetSettings = function() {
-            console.log('🔄 RESET SETTINGS CALLED!');
-            gameSettings = {
-                leftHanded: true,
-                showMinimap: true,
-                enhancedGraphics: true,
-                vibrationEnabled: true
-            };
-            if (typeof updateSettingsUI === 'function') updateSettingsUI();
-            if (typeof applySettingsInternal === 'function') applySettingsInternal();
-        };
-
-        // Additional critical game functions
-        window.gameOver = function() {
-            console.log('💀 GAME OVER CALLED!');
-            gameState = 'gameOver';
-            
-            // Cancel animation loop
-            if (typeof animationId !== 'undefined' && animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-            
-            const finalScoreEl = document.getElementById('finalScore');
-            const finalComboEl = document.getElementById('finalCombo');
-            const gameOverScreen = document.getElementById('gameOverScreen');
-            
-            if (finalScoreEl && typeof score !== 'undefined') {
-                finalScoreEl.textContent = score.toLocaleString();
-            }
-            if (finalComboEl && typeof maxCombo !== 'undefined') {
-                finalComboEl.textContent = maxCombo;
-            }
-            if (gameOverScreen) {
-                gameOverScreen.style.display = 'block';
-            }
-            
-            if (gameSettings.vibrationEnabled && (isMobile || isiOS) && navigator.vibrate) {
-                navigator.vibrate([500, 200, 500, 200, 1000]);
-            }
-        };
-
-        window.showMessage = function(message, duration = 2000) {
-            if (typeof stateMessage !== 'undefined') {
-                stateMessage = message;
-                stateMessageTimer = duration;
-            }
-        };
+        // Game timing
+        let lastTime = 0;
+        let animationId = null;
 
         // Load settings from localStorage if available
         function loadSettings() {
@@ -2368,7 +1933,93 @@
             animationId = requestAnimationFrame(gameLoop);
         }
 
+        // Game control functions
+        function startGame() {
+            console.log('Starting game...');
+            
+            // Cancel any existing animation
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Set game state first
+            gameState = 'playing';
+            
+            // Hide start screen
+            const startScreen = document.getElementById('startScreen');
+            if (startScreen) {
+                startScreen.style.display = 'none';
+            }
+            
+            // Initialize game
+            try {
+                initGame();
+                console.log('Game initialized');
+                
+                // Initialize mobile controls
+                initMobileControls();
+                console.log('Mobile controls initialized');
+                
+                // Start game loop
+                lastTime = performance.now();
+                gameLoop();
+                console.log('Game loop started');
+                
+            } catch (error) {
+                console.error('Error starting game:', error);
+                // Fallback - try again
+                setTimeout(() => {
+                    initGame();
+                    initMobileControls();
+                    gameLoop();
+                }, 100);
+            }
+        }
 
+        function gameOver() {
+            console.log('Game over');
+            gameState = 'gameOver';
+            
+            // Cancel animation loop
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            document.getElementById('finalScore').textContent = score.toLocaleString();
+            document.getElementById('finalCombo').textContent = maxCombo;
+            document.getElementById('gameOverScreen').style.display = 'block';
+            
+            if (isMobile && navigator.vibrate) {
+                navigator.vibrate([500, 200, 500, 200, 1000]);
+            }
+        }
+
+        function restartGame() {
+            console.log('Restarting game');
+            document.getElementById('gameOverScreen').style.display = 'none';
+            achievements.clear();
+            startGame();
+        }
+
+        function togglePause() {
+            if (gameState === 'playing') {
+                gameState = 'paused';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                showMessage("⏸️ GAME PAUSED ⏸️", 99999);
+                document.querySelector('.pause-btn').textContent = '▶️';
+            } else if (gameState === 'paused') {
+                gameState = 'playing';
+                stateMessageTimer = 0;
+                document.querySelector('.pause-btn').textContent = '⏸️';
+                lastTime = performance.now();
+                gameLoop();
+            }
+        }
 
         // Event listeners with iOS optimizations
         document.addEventListener('keydown', (e) => {
