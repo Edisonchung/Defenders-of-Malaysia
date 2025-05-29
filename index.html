@@ -681,6 +681,87 @@
             }
         }
 
+        // Settings functions
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            const isVisible = panel.style.display === 'block';
+            
+            if (isVisible) {
+                closeSettings();
+            } else {
+                panel.style.display = 'block';
+                updateSettingsUI();
+                
+                // Pause game if playing
+                if (gameState === 'playing') {
+                    togglePause();
+                }
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsPanel').style.display = 'none';
+        }
+
+        function updateSettingsUI() {
+            document.getElementById('leftHandedToggle').classList.toggle('active', gameSettings.leftHanded);
+            document.getElementById('minimapToggle').classList.toggle('active', gameSettings.showMinimap);
+            document.getElementById('graphicsToggle').classList.toggle('active', gameSettings.enhancedGraphics);
+            document.getElementById('vibrationToggle').classList.toggle('active', gameSettings.vibrationEnabled);
+        }
+
+        function toggleLeftHanded() {
+            gameSettings.leftHanded = !gameSettings.leftHanded;
+            updateSettingsUI();
+        }
+
+        function toggleMinimap() {
+            gameSettings.showMinimap = !gameSettings.showMinimap;
+            updateSettingsUI();
+        }
+
+        function toggleGraphics() {
+            gameSettings.enhancedGraphics = !gameSettings.enhancedGraphics;
+            updateSettingsUI();
+        }
+
+        function toggleVibration() {
+            gameSettings.vibrationEnabled = !gameSettings.vibrationEnabled;
+            updateSettingsUI();
+        }
+
+        function applySettings() {
+            // Apply left-handed controls
+            const mobileControls = document.querySelector('.mobile-controls');
+            if (mobileControls) {
+                mobileControls.className = gameSettings.leftHanded ? 
+                    'mobile-controls controls-right' : 'mobile-controls controls-left';
+            }
+            
+            // Apply minimap visibility
+            const minimap = document.getElementById('minimap');
+            if (minimap) {
+                minimap.style.display = gameSettings.showMinimap ? 'block' : 'none';
+            }
+            
+            // Save settings
+            saveSettings();
+            
+            showMessage(`⚙️ Settings Applied! ${gameSettings.leftHanded ? 'Right-Hand Mode ON' : 'Left-Hand Mode ON'}`, 2000);
+        }
+
+        function resetSettings() {
+            gameSettings = {
+                leftHanded: true,  // Default to right-hand controls
+                showMinimap: true,
+                enhancedGraphics: true,
+                vibrationEnabled: true
+            };
+            updateSettingsUI();
+            applySettings();
+            showMessage("🔄 Settings Reset to Default!", 2000);
+        }
+
         // Enhanced weapon system
         const weaponTypes = {
             basic: { damage: 10, speed: 8, color: '#ffff00', sound: 'pew' },
