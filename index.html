@@ -222,13 +222,13 @@
             display: none;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 768px), (max-height: 500px) {
             .mobile-controls {
                 display: block;
             }
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 769px) and (min-height: 501px) {
             .mobile-controls {
                 display: none !important;
             }
@@ -423,9 +423,10 @@
     </div>
 
     <script>
-        // Mobile detection - prioritize user agent over touch capability
+        // Mobile detection - better detection for all devices
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                         (window.innerWidth <= 768 && 'ontouchstart' in window);
+                         (window.innerWidth <= 768) || 
+                         ('ontouchstart' in window && window.innerHeight < window.innerWidth);
         
         // Get canvas and context
         const canvas = document.getElementById('gameCanvas');
@@ -488,10 +489,18 @@
 
         // Initialize mobile controls
         function initMobileControls() {
-            // Always show appropriate controls text
-            if (isMobile) {
+            // Check if we should use mobile controls
+            const shouldUseMobile = isMobile || window.innerWidth <= 768 || window.innerHeight < 500;
+            
+            if (shouldUseMobile) {
                 document.querySelectorAll('.desktop-controls').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('.mobile-controls-text').forEach(el => el.style.display = 'block');
+                
+                // Force mobile controls to be visible
+                const mobileControlsDiv = document.querySelector('.mobile-controls');
+                if (mobileControlsDiv) {
+                    mobileControlsDiv.style.display = 'block';
+                }
             } else {
                 document.querySelectorAll('.desktop-controls').forEach(el => el.style.display = 'block');
                 document.querySelectorAll('.mobile-controls-text').forEach(el => el.style.display = 'none');
@@ -553,10 +562,12 @@
             joystick.addEventListener('touchmove', handleJoystickMove, { passive: false });
             joystick.addEventListener('touchend', handleJoystickEnd, { passive: false });
 
-            // Mouse events for desktop testing
-            joystick.addEventListener('mousedown', handleJoystickStart);
-            document.addEventListener('mousemove', handleJoystickMove);
-            document.addEventListener('mouseup', handleJoystickEnd);
+            // Mouse events for desktop testing (only if not mobile)
+            if (!shouldUseMobile) {
+                joystick.addEventListener('mousedown', handleJoystickStart);
+                document.addEventListener('mousemove', handleJoystickMove);
+                document.addEventListener('mouseup', handleJoystickEnd);
+            }
 
             // Fire button
             function handleFireStart(e) {
@@ -579,8 +590,12 @@
 
             fireButton.addEventListener('touchstart', handleFireStart, { passive: false });
             fireButton.addEventListener('touchend', handleFireEnd, { passive: false });
-            fireButton.addEventListener('mousedown', handleFireStart);
-            fireButton.addEventListener('mouseup', handleFireEnd);
+            
+            // Mouse events for desktop testing (only if not mobile)
+            if (!shouldUseMobile) {
+                fireButton.addEventListener('mousedown', handleFireStart);
+                fireButton.addEventListener('mouseup', handleFireEnd);
+            }
         }
 
         // Initialize game
@@ -742,8 +757,9 @@
                 moveY += 1;
             }
 
-            // Mobile controls
-            if (isMobile && joystickActive) {
+            // Mobile controls - check for active joystick movement
+            const shouldUseMobile = isMobile || window.innerWidth <= 768 || window.innerHeight < 500;
+            if (shouldUseMobile && (Math.abs(joystickMovement.x) > 0.1 || Math.abs(joystickMovement.y) > 0.1)) {
                 moveX = joystickMovement.x;
                 moveY = joystickMovement.y;
             }
@@ -757,7 +773,8 @@
             player.y = Math.max(20 * gameScale, Math.min(canvas.height - 20 * gameScale, player.y));
 
             // Shooting
-            if ((keys[' '] || (isMobile && fireButtonPressed)) && Date.now() - lastShotTime > shotCooldown) {
+            const shouldShoot = keys[' '] || (shouldUseMobile && fireButtonPressed);
+            if (shouldShoot && Date.now() - lastShotTime > shotCooldown) {
                 shoot();
                 lastShotTime = Date.now();
             }
@@ -1451,9 +1468,13 @@
             gameState = 'playing';
             document.getElementById('startScreen').style.display = 'none';
             initGame();
-            if (isMobile) {
+            
+            // Always try to initialize mobile controls on small screens
+            const shouldUseMobile = isMobile || window.innerWidth <= 768 || window.innerHeight < 500;
+            if (shouldUseMobile) {
                 initMobileControls();
             }
+            
             gameLoop();
         }
 
@@ -1520,14 +1541,23 @@
         // Initialize game on load
         initGame();
         
-        // Force desktop controls visibility on larger screens
-        if (window.innerWidth > 768) {
+        // Auto-detect and show appropriate controls
+        const shouldUseMobile = isMobile || window.innerWidth <= 768 || window.innerHeight < 500;
+        if (shouldUseMobile) {
+            document.querySelectorAll('.desktop-controls').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.mobile-controls-text').forEach(el => el.style.display = 'block');
+            // Force mobile controls div to be visible
+            const mobileControlsDiv = document.querySelector('.mobile-controls');
+            if (mobileControlsDiv) {
+                mobileControlsDiv.style.display = 'block';
+            }
+        } else {
             document.querySelectorAll('.desktop-controls').forEach(el => el.style.display = 'block');
             document.querySelectorAll('.mobile-controls-text').forEach(el => el.style.display = 'none');
         }
         
         // Mobile-specific initialization
-        if (isMobile) {
+        if (shouldUseMobile) {
             // Lock screen orientation if possible
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(() => {
