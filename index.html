@@ -486,8 +486,8 @@
             COMBO x<span id="comboValue">0</span>
         </div>
 
-        <button class="pause-btn" onclick="togglePause()">⏸</button>
-        <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+        <button class="pause-btn" id="pauseBtn">⏸</button>
+        <button class="settings-btn" id="settingsBtn">⚙️</button>
 
         <div id="startScreen" class="start-screen">
             <h2>DEFENDERS OF MALAYSIA</h2>
@@ -514,7 +514,7 @@
                     <div class="setting-label">Right-Handed Mode</div>
                     <div class="setting-description">Joystick on right, fire buttons on left</div>
                 </div>
-                <div class="toggle-switch active" id="leftHandedToggle" onclick="toggleLeftHanded()">
+                <div class="toggle-switch active" id="leftHandedToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -524,7 +524,7 @@
                     <div class="setting-label">Show Minimap</div>
                     <div class="setting-description">Display tactical minimap</div>
                 </div>
-                <div class="toggle-switch active" id="minimapToggle" onclick="toggleMinimap()">
+                <div class="toggle-switch active" id="minimapToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -534,7 +534,7 @@
                     <div class="setting-label">Enhanced Graphics</div>
                     <div class="setting-description">Better effects but may reduce performance</div>
                 </div>
-                <div class="toggle-switch active" id="graphicsToggle" onclick="toggleGraphics()">
+                <div class="toggle-switch active" id="graphicsToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -544,15 +544,15 @@
                     <div class="setting-label">Vibration</div>
                     <div class="setting-description">Haptic feedback on mobile devices</div>
                 </div>
-                <div class="toggle-switch active" id="vibrationToggle" onclick="toggleVibration()">
+                <div class="toggle-switch active" id="vibrationToggle">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             
             <div class="settings-buttons">
-                <button class="settings-btn-action" onclick="applySettings()">APPLY</button>
-                <button class="settings-btn-secondary" onclick="resetSettings()">RESET</button>
-                <button class="settings-btn-secondary" onclick="closeSettings()">CLOSE</button>
+                <button class="settings-btn-action" id="applyBtn">APPLY</button>
+                <button class="settings-btn-secondary" id="resetBtn">RESET</button>
+                <button class="settings-btn-secondary" id="closeBtn">CLOSE</button>
             </div>
         </div>
 
@@ -681,86 +681,7 @@
             }
         }
 
-        // Settings functions
-        function toggleSettings() {
-            const panel = document.getElementById('settingsPanel');
-            const isVisible = panel.style.display === 'block';
-            
-            if (isVisible) {
-                closeSettings();
-            } else {
-                panel.style.display = 'block';
-                updateSettingsUI();
-                
-                // Pause game if playing
-                if (gameState === 'playing') {
-                    togglePause();
-                }
-            }
-        }
 
-        function closeSettings() {
-            document.getElementById('settingsPanel').style.display = 'none';
-        }
-
-        function updateSettingsUI() {
-            document.getElementById('leftHandedToggle').classList.toggle('active', gameSettings.leftHanded);
-            document.getElementById('minimapToggle').classList.toggle('active', gameSettings.showMinimap);
-            document.getElementById('graphicsToggle').classList.toggle('active', gameSettings.enhancedGraphics);
-            document.getElementById('vibrationToggle').classList.toggle('active', gameSettings.vibrationEnabled);
-        }
-
-        function toggleLeftHanded() {
-            gameSettings.leftHanded = !gameSettings.leftHanded;
-            updateSettingsUI();
-        }
-
-        function toggleMinimap() {
-            gameSettings.showMinimap = !gameSettings.showMinimap;
-            updateSettingsUI();
-        }
-
-        function toggleGraphics() {
-            gameSettings.enhancedGraphics = !gameSettings.enhancedGraphics;
-            updateSettingsUI();
-        }
-
-        function toggleVibration() {
-            gameSettings.vibrationEnabled = !gameSettings.vibrationEnabled;
-            updateSettingsUI();
-        }
-
-        function applySettings() {
-            // Apply left-handed controls
-            const mobileControls = document.querySelector('.mobile-controls');
-            if (mobileControls) {
-                mobileControls.className = gameSettings.leftHanded ? 
-                    'mobile-controls controls-right' : 'mobile-controls controls-left';
-            }
-            
-            // Apply minimap visibility
-            const minimap = document.getElementById('minimap');
-            if (minimap) {
-                minimap.style.display = gameSettings.showMinimap ? 'block' : 'none';
-            }
-            
-            // Save settings
-            saveSettings();
-            
-            showMessage(`⚙️ Settings Applied! ${gameSettings.leftHanded ? 'Right-Hand Mode ON' : 'Left-Hand Mode ON'}`, 2000);
-        }
-
-        function resetSettings() {
-            gameSettings = {
-                leftHanded: true,  // Default to right-hand controls
-                showMinimap: true,
-                enhancedGraphics: true,
-                vibrationEnabled: true
-            };
-            updateSettingsUI();
-            applySettings();
-            showMessage("🔄 Settings Reset to Default!", 2000);
-        }
 
         // Enhanced weapon system
         const weaponTypes = {
@@ -1876,155 +1797,7 @@
             }
         }
 
-        // Mobile controls initialization with iOS enhancements
-        function initMobileControls() {
-            // Enhanced mobile detection for controls
-            const shouldUseMobile = isMobile || isiPad || window.innerWidth <= 1024;
-            
-            if (shouldUseMobile) {
-                document.querySelectorAll('.desktop-controls').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.mobile-controls-text').forEach(el => el.style.display = 'block');
-                
-                const mobileControlsDiv = document.querySelector('.mobile-controls');
-                if (mobileControlsDiv) {
-                    mobileControlsDiv.style.display = 'block';
-                }
-                
-                const joystick = document.getElementById('joystick');
-                const joystickKnob = document.getElementById('joystickKnob');
-                const fireButton = document.getElementById('fireButton');
-                const specialButton = document.getElementById('specialButton');
 
-                // Enhanced joystick for iOS with better touch handling
-                function handleJoystickStart(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    joystickActive = true;
-                    
-                    const rect = joystick.getBoundingClientRect();
-                    joystickCenter.x = rect.left + rect.width / 2;
-                    joystickCenter.y = rect.top + rect.height / 2;
-                    
-                    // iOS haptic feedback
-                    if (isiOS && window.navigator && window.navigator.vibrate) {
-                        window.navigator.vibrate(50);
-                    }
-                    
-                    // Prevent iOS scroll
-                    document.body.style.overflow = 'hidden';
-                }
-
-                function handleJoystickMove(e) {
-                    if (!joystickActive) return;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const touch = e.touches ? e.touches[0] : e;
-                    if (!touch) return;
-                    
-                    const deltaX = touch.clientX - joystickCenter.x;
-                    const deltaY = touch.clientY - joystickCenter.y;
-                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                    const maxDistance = isiPad ? 40 : 35;
-
-                    if (distance <= maxDistance) {
-                        joystickMovement.x = deltaX / maxDistance;
-                        joystickMovement.y = deltaY / maxDistance;
-                        joystickKnob.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
-                    } else {
-                        const angle = Math.atan2(deltaY, deltaX);
-                        const limitedX = Math.cos(angle) * maxDistance;
-                        const limitedY = Math.sin(angle) * maxDistance;
-                        joystickMovement.x = limitedX / maxDistance;
-                        joystickMovement.y = limitedY / maxDistance;
-                        joystickKnob.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
-                    }
-                }
-
-                function handleJoystickEnd(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    joystickActive = false;
-                    joystickMovement.x = 0;
-                    joystickMovement.y = 0;
-                    joystickKnob.style.transform = 'translate(-50%, -50%)';
-                    
-                    // Restore iOS scroll
-                    document.body.style.overflow = '';
-                }
-
-                // iOS-optimized touch events
-                if (joystick) {
-                    joystick.addEventListener('touchstart', handleJoystickStart, { passive: false });
-                    joystick.addEventListener('touchmove', handleJoystickMove, { passive: false });
-                    joystick.addEventListener('touchend', handleJoystickEnd, { passive: false });
-                    joystick.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
-                }
-
-                // Enhanced fire button for iOS
-                function handleFireStart(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    fireButtonPressed = true;
-                    fireButton.style.transform = 'scale(0.9)';
-                    fireButton.style.background = 'rgba(255, 255, 0, 0.5)';
-                    
-                    if (isiOS && window.navigator && window.navigator.vibrate) {
-                        window.navigator.vibrate(30);
-                    }
-                }
-
-                function handleFireEnd(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    fireButtonPressed = false;
-                    fireButton.style.transform = 'scale(1)';
-                    fireButton.style.background = 'rgba(255, 255, 0, 0.2)';
-                }
-
-                if (fireButton) {
-                    fireButton.addEventListener('touchstart', handleFireStart, { passive: false });
-                    fireButton.addEventListener('touchend', handleFireEnd, { passive: false });
-                    fireButton.addEventListener('touchcancel', handleFireEnd, { passive: false });
-                }
-
-                // Enhanced special button for iOS
-                function handleSpecialStart(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (specialCooldown <= 0) {
-                        specialButtonPressed = true;
-                        specialButton.style.transform = 'scale(0.9)';
-                        specialButton.style.background = 'rgba(255, 0, 255, 0.5)';
-                        
-                        if (isiOS && window.navigator && window.navigator.vibrate) {
-                            window.navigator.vibrate(100);
-                        }
-                    }
-                }
-
-                function handleSpecialEnd(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    specialButtonPressed = false;
-                    specialButton.style.transform = 'scale(1)';
-                    specialButton.style.background = 'rgba(255, 0, 255, 0.2)';
-                }
-
-                if (specialButton) {
-                    specialButton.addEventListener('touchstart', handleSpecialStart, { passive: false });
-                    specialButton.addEventListener('touchend', handleSpecialEnd, { passive: false });
-                    specialButton.addEventListener('touchcancel', handleSpecialEnd, { passive: false });
-                }
-                
-                // Prevent iOS bounce scrolling
-                document.addEventListener('touchmove', function(e) {
-                    if (e.target.closest('.mobile-controls')) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
-            }
-        }
 
         // Enhanced level progression
         function checkLevelUp() {
