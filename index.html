@@ -6,12 +6,18 @@
             console.log('iOS device detected:', isiOS, 'Should use mobile:', shouldUseMobile);
             
             if (shouldUseMobile) {
-                // Force show mobile controls
+                // Force show mobile controls with aggressive CSS
                 const mobileControlsDiv = document.querySelector('.mobile-controls');
                 if (mobileControlsDiv) {
                     mobileControlsDiv.style.display = 'block';
                     mobileControlsDiv.style.visibility = 'visible';
                     mobileControlsDiv.style.pointerEvents = 'auto';
+                    mobileControlsDiv.style.position = 'absolute';
+                    mobileControlsDiv.style.bottom = '0';
+                    mobileControlsDiv.style.left = '0';
+                    mobileControlsDiv.style.right = '0';
+                    mobileControlsDiv.style.height = '150px';
+                    mobileControlsDiv.style.zIndex = '20';
                     
                     // Apply correct positioning class
                     mobileControlsDiv.classList.remove('controls-left', 'controls-right');
@@ -19,6 +25,12 @@
                     mobileControlsDiv.classList.add(controlClass);
                     
                     console.log('✅ Mobile controls visible with class:', controlClass);
+                    console.log('Mobile controls styles:', {
+                        display: mobileControlsDiv.style.display,
+                        visibility: mobileControlsDiv.style.visibility,
+                        position: mobileControlsDiv.style.position,
+                        zIndex: mobileControlsDiv.style.zIndex
+                    });
                     
                     // Use iOS-specific touch handling
                     if (isiOS) {
@@ -697,6 +709,13 @@
         window.startGame = function() {
             console.log('🎮 START GAME CALLED!');
             
+            // Force hide start screen first
+            const startScreen = document.getElementById('startScreen');
+            if (startScreen) {
+                startScreen.style.display = 'none';
+                console.log('✅ Start screen hidden');
+            }
+            
             // Cancel any existing animation
             if (typeof animationId !== 'undefined' && animationId) {
                 cancelAnimationFrame(animationId);
@@ -705,13 +724,6 @@
             
             // Set game state first
             gameState = 'playing';
-            
-            // Hide start screen
-            const startScreen = document.getElementById('startScreen');
-            if (startScreen) {
-                startScreen.style.display = 'none';
-                console.log('✅ Start screen hidden');
-            }
             
             // Initialize game
             try {
@@ -722,10 +734,21 @@
                     console.error('❌ initGame function not found');
                 }
                 
-                // Initialize mobile controls
-                if (typeof initMobileControls === 'function') {
-                    initMobileControls();
-                    console.log('✅ Mobile controls initialized');
+                // Force show and initialize mobile controls for iOS
+                const mobileControlsDiv = document.querySelector('.mobile-controls');
+                if (mobileControlsDiv && (isiOS || isMobile)) {
+                    mobileControlsDiv.style.display = 'block';
+                    mobileControlsDiv.style.visibility = 'visible';
+                    mobileControlsDiv.style.pointerEvents = 'auto';
+                    console.log('✅ Mobile controls forced visible for iOS');
+                    
+                    // Initialize mobile controls
+                    if (typeof initMobileControls === 'function') {
+                        setTimeout(() => {
+                            initMobileControls();
+                            console.log('✅ Mobile controls initialized');
+                        }, 100);
+                    }
                 }
                 
                 // Start game loop
